@@ -4,6 +4,7 @@ const state = {
   allCatalogCache: [],
   busyProducts: new Set(),
   checkoutBusy: false,
+  logoutBusy: false,
   cartItems: [],
   authMode: "login",
   authBusy: false,
@@ -82,6 +83,11 @@ function isAuthModalOpen() {
   return Boolean(modal && modal.style.display !== "none" && modal.style.display !== "");
 }
 
+function isLogoutConfirmOpen() {
+  const modal = document.getElementById("logoutConfirmModal");
+  return Boolean(modal && modal.style.display !== "none" && modal.style.display !== "");
+}
+
 function routeActionMessage(message, isError = true, preferredInlineId = "") {
   if (preferredInlineId && document.getElementById(preferredInlineId)) {
     showInlineAlert(preferredInlineId, message, isError);
@@ -117,9 +123,11 @@ async function parseResponseBody(res) {
 
 function openCartDrawer() {
   const modal = document.getElementById("authModal");
+  const confirmModal = document.getElementById("logoutConfirmModal");
   const backdrop = document.getElementById("overlayBackdrop");
   const drawer = document.getElementById("cartDrawer");
   if (modal) modal.style.display = "none";
+  if (confirmModal) confirmModal.style.display = "none";
   if (backdrop) backdrop.style.display = "block";
   if (drawer) {
     drawer.classList.add("open");
@@ -130,13 +138,17 @@ function openCartDrawer() {
 function closeCartDrawer() {
   const drawer = document.getElementById("cartDrawer");
   const modal = document.getElementById("authModal");
+  const confirmModal = document.getElementById("logoutConfirmModal");
   const backdrop = document.getElementById("overlayBackdrop");
   clearInlineAlert("cartStatusBanner");
   if (drawer) {
     drawer.classList.remove("open");
     drawer.setAttribute("aria-hidden", "true");
   }
-  if (backdrop && (!modal || modal.style.display === "none")) {
+  const hasOther =
+    Boolean(modal && modal.style.display !== "none" && modal.style.display !== "") ||
+    Boolean(confirmModal && confirmModal.style.display !== "none" && confirmModal.style.display !== "");
+  if (backdrop && !hasOther) {
     backdrop.style.display = "none";
   }
 }
@@ -167,6 +179,7 @@ function togglePasswordVisibility() {
 
 function openAuthModal(mode = "login", prefillError = "") {
   closeCartDrawer();
+  closeLogoutConfirmModal();
   clearStatus();
   clearInlineAlert("authStatusBanner");
   const backdrop = document.getElementById("overlayBackdrop");
@@ -182,11 +195,41 @@ function openAuthModal(mode = "login", prefillError = "") {
 function closeAuthModal() {
   const modal = document.getElementById("authModal");
   const drawer = document.getElementById("cartDrawer");
+  const confirmModal = document.getElementById("logoutConfirmModal");
   const backdrop = document.getElementById("overlayBackdrop");
   clearInlineAlert("authStatusBanner");
   resetPasswordVisibility();
   if (modal) modal.style.display = "none";
-  if (backdrop && (!drawer || !drawer.classList.contains("open"))) {
+  const hasOther =
+    Boolean(drawer && drawer.classList.contains("open")) ||
+    Boolean(confirmModal && confirmModal.style.display !== "none" && confirmModal.style.display !== "");
+  if (backdrop && !hasOther) {
+    backdrop.style.display = "none";
+  }
+}
+
+function openLogoutConfirmModal() {
+  if (!state.isAuthenticated) return;
+  closeCartDrawer();
+  closeAuthModal();
+  clearStatus();
+  const backdrop = document.getElementById("overlayBackdrop");
+  const confirmModal = document.getElementById("logoutConfirmModal");
+  if (backdrop) backdrop.style.display = "block";
+  if (confirmModal) confirmModal.style.display = "flex";
+  document.getElementById("btnCancelLogout")?.focus();
+}
+
+function closeLogoutConfirmModal() {
+  const confirmModal = document.getElementById("logoutConfirmModal");
+  const drawer = document.getElementById("cartDrawer");
+  const modal = document.getElementById("authModal");
+  const backdrop = document.getElementById("overlayBackdrop");
+  if (confirmModal) confirmModal.style.display = "none";
+  const hasOther =
+    Boolean(drawer && drawer.classList.contains("open")) ||
+    Boolean(modal && modal.style.display !== "none" && modal.style.display !== "");
+  if (backdrop && !hasOther) {
     backdrop.style.display = "none";
   }
 }
@@ -194,6 +237,7 @@ function closeAuthModal() {
 function closeAllOverlays() {
   closeCartDrawer();
   closeAuthModal();
+  closeLogoutConfirmModal();
   const backdrop = document.getElementById("overlayBackdrop");
   if (backdrop) backdrop.style.display = "none";
 }
@@ -698,7 +742,14 @@ async function submitAuth() {
   }
 }
 
-async function logoutUser() {
+async function performLogout() {
+  if (state.logoutBusy) return;
+  state.logoutBusy = true;
+  const confirmBtn = document.getElementById("btnConfirmLogout");
+  const cancelBtn = document.getElementById("btnCancelLogout");
+  if (confirmBtn) confirmBtn.disabled = true;
+  if (cancelBtn) cancelBtn.disabled = true;
+
   try {
     const res = await fetch("/api/auth/logout", {
       method: "POST",
@@ -711,10 +762,27 @@ async function logoutUser() {
       redirectToLoginRequired();
     } else {
       const data = await parseResponseBody(res);
+      closeLogoutConfirmModal();
       routeActionMessage(data.error || `No se pudo cerrar sesión (HTTP ${res.status}).`, true);
     }
   } catch (_err) {
+    closeLogoutConfirmModal();
     routeActionMessage("Sin conexión con el servidor al cerrar sesión.", true);
+  } finally {
+    state.logoutBusy = false;
+    if (confirmBtn) confirmBtn.disabled = false;
+    if (cancelBtn) cancelBtn.disabled = false;
+  }
+}
+
+function logoutUser() {
+  const confirmModal = document.getElementById("logoutConfirmModal");
+  if (confirmModal) {
+    openLogoutConfirmModal();
+    return;
+  }
+  if (window.confirm("¿Estás seguro de cerrar sesión?")) {
+    void performLogout();
   }
 }
 
@@ -837,7 +905,9 @@ document.getElementById("btnOpenCart")?.addEventListener("click", () => {
 document.getElementById("btnCloseCart")?.addEventListener("click", () => closeAllOverlays());
 document.getElementById("btnOpenAuth")?.addEventListener("click", () => openAuthModal("login"));
 document.getElementById("btnCloseAuth")?.addEventListener("click", () => closeAllOverlays());
-document.getElementById("overlayBackdrop")?.addEventListener("click", () => closeAllOverlays());
+document.getElementById("overlayBackdrop")?.addEventListener("click", () => {
+  if (!isLogoutConfirmOpen()) closeAllOverlays();
+});
 
 document.getElementById("tabLogin")?.addEventListener("click", () => setAuthMode("login"));
 document.getElementById("tabRegister")?.addEventListener("click", () => setAuthMode("register"));
@@ -852,7 +922,11 @@ document.getElementById("authForm")?.addEventListener("submit", async (event) =>
   await submitAuth();
 });
 
-document.getElementById("btnLogout")?.addEventListener("click", async () => logoutUser());
+document.getElementById("btnLogout")?.addEventListener("click", () => logoutUser());
+document.getElementById("btnConfirmLogout")?.addEventListener("click", async () => performLogout());
+document.getElementById("btnCancelLogout")?.addEventListener("click", () => closeLogoutConfirmModal());
+document.getElementById("btnCancelLogoutTop")?.addEventListener("click", () => closeLogoutConfirmModal());
+
 document.getElementById("btnCheckout")?.addEventListener("click", async () => checkoutOrder());
 
 document.getElementById("productsContainer")?.addEventListener("click", async (event) => {
