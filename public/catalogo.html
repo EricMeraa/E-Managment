@@ -110,7 +110,7 @@
 
       <h2 id="authTitle">Iniciar sesión</h2>
 
-      <form id="authForm" class="modal-form">
+      <form id="authForm" class="modal-form" novalidate>
         <div id="nameFieldGroup" class="field-group" style="display: none;">
           <label for="authName">Nombre completo</label>
           <input id="authName" type="text" placeholder="Nombre completo" autocomplete="name" />
@@ -123,7 +123,12 @@
 
         <div class="field-group">
           <label for="authPassword">Contraseña</label>
-          <input id="authPassword" type="password" placeholder="Mínimo 6 caracteres" autocomplete="current-password" />
+          <div class="password-input-wrap" style="display: flex; align-items: center; gap: 8px;">
+            <input id="authPassword" type="password" placeholder="Mínimo 6 caracteres" minlength="6" autocomplete="current-password" style="flex: 1;" />
+            <button id="btnTogglePassword" class="btn-text" type="button" aria-label="Mostrar u ocultar contraseña" aria-pressed="false">
+              Mostrar
+            </button>
+          </div>
         </div>
 
         <div id="roleFieldGroup" class="field-group" style="display: none;">

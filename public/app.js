@@ -138,10 +138,32 @@ function closeCartDrawer() {
   }
 }
 
+function resetPasswordVisibility() {
+  const passwordEl = document.getElementById("authPassword");
+  const toggleBtn = document.getElementById("btnTogglePassword");
+  if (passwordEl) passwordEl.type = "password";
+  if (toggleBtn) {
+    toggleBtn.textContent = "Mostrar";
+    toggleBtn.setAttribute("aria-pressed", "false");
+  }
+}
+
+function togglePasswordVisibility() {
+  const passwordEl = document.getElementById("authPassword");
+  const toggleBtn = document.getElementById("btnTogglePassword");
+  if (!passwordEl || !toggleBtn) return;
+
+  const isHidden = passwordEl.type === "password";
+  passwordEl.type = isHidden ? "text" : "password";
+  toggleBtn.textContent = isHidden ? "Ocultar" : "Mostrar";
+  toggleBtn.setAttribute("aria-pressed", isHidden ? "true" : "false");
+}
+
 function openAuthModal(mode = "login", prefillError = "") {
   closeCartDrawer();
   clearStatus();
   clearInlineAlert("authStatusBanner");
+  resetPasswordVisibility();
   const backdrop = document.getElementById("overlayBackdrop");
   const modal = document.getElementById("authModal");
   if (backdrop) backdrop.style.display = "block";
@@ -157,6 +179,7 @@ function closeAuthModal() {
   const drawer = document.getElementById("cartDrawer");
   const backdrop = document.getElementById("overlayBackdrop");
   clearInlineAlert("authStatusBanner");
+  resetPasswordVisibility();
   if (modal) modal.style.display = "none";
   if (backdrop && (!drawer || !drawer.classList.contains("open"))) {
     backdrop.style.display = "none";
@@ -173,6 +196,7 @@ function closeAllOverlays() {
 function setAuthMode(mode) {
   state.authMode = mode;
   clearInlineAlert("authStatusBanner");
+  resetPasswordVisibility();
   const isRegister = mode === "register";
   const authTitle = document.getElementById("authTitle");
   const nameGroup = document.getElementById("nameFieldGroup");
@@ -566,8 +590,28 @@ async function submitAuth() {
   const password = passwordEl ? passwordEl.value : "";
   const role = roleEl ? roleEl.value : "CUSTOMER";
 
-  if (!email || !password || (state.authMode === "register" && !name)) {
-    showInlineAlert("authStatusBanner", "Completa todos los campos requeridos.", true);
+  if (state.authMode === "register" && name.length < 2) {
+    showInlineAlert("authStatusBanner", "El nombre debe tener al menos 2 caracteres.", true);
+    return;
+  }
+
+  if (!email) {
+    showInlineAlert("authStatusBanner", "Ingresa tu correo electrónico.", true);
+    return;
+  }
+
+  if (state.authMode === "register" && !email.includes("@")) {
+    showInlineAlert("authStatusBanner", "El correo electrónico no es válido.", true);
+    return;
+  }
+
+  if (!password) {
+    showInlineAlert("authStatusBanner", "Ingresa tu contraseña.", true);
+    return;
+  }
+
+  if (state.authMode === "register" && password.trim().length < 6) {
+    showInlineAlert("authStatusBanner", "La contraseña debe tener al menos 6 caracteres.", true);
     return;
   }
 
@@ -600,6 +644,7 @@ async function submitAuth() {
     const userRole = String(data.role || "CUSTOMER").toUpperCase();
     setAuthenticatedUI(true, userLabel, userRole);
     if (passwordEl) passwordEl.value = "";
+    resetPasswordVisibility();
     closeAllOverlays();
 
     if (userRole === "ADMIN") {
@@ -744,6 +789,7 @@ document.getElementById("overlayBackdrop")?.addEventListener("click", () => clos
 
 document.getElementById("tabLogin")?.addEventListener("click", () => setAuthMode("login"));
 document.getElementById("tabRegister")?.addEventListener("click", () => setAuthMode("register"));
+document.getElementById("btnTogglePassword")?.addEventListener("click", () => togglePasswordVisibility());
 
 ["authName", "authEmail", "authPassword"].forEach((id) => {
   document.getElementById(id)?.addEventListener("input", () => clearInlineAlert("authStatusBanner"));
