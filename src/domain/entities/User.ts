@@ -38,7 +38,7 @@ export class User {
   }
 
   public static validatePasswordPolicy(plainPassword: string): void {
-    if (typeof plainPassword !== "string" || plainPassword.length < 6) {
+    if (typeof plainPassword !== "string" || plainPassword.trim().length < 6) {
       throw new Error("La contrasena debe tener al menos 6 caracteres.");
     }
   }
