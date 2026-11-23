@@ -166,6 +166,23 @@
     </div>
   </div>
 
-  <script src="/app.js?v=9"></script>
+  <div id="logoutConfirmModal" class="modal" role="dialog" aria-modal="true" aria-labelledby="logoutConfirmTitle" style="display: none;">
+    <div class="modal-card">
+      <div class="modal-header">
+        <p class="eyebrow">CONFIRMACIÓN DE SESIÓN</p>
+        <button id="btnCancelLogoutTop" class="btn-text" type="button">Cerrar</button>
+      </div>
+
+      <h2 id="logoutConfirmTitle">¿Estás seguro de cerrar sesión?</h2>
+      <p class="footer-note">Se cerrará tu sesión actual en E-Managment.</p>
+
+      <div class="modal-actions" style="display: flex; gap: 10px; justify-content: flex-end; margin-top: 16px;">
+        <button id="btnCancelLogout" class="btn-text" type="button">Cancelar</button>
+        <button id="btnConfirmLogout" class="btn-primary" type="button">Sí, cerrar sesión</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="/app.js?v=10"></script>
 </body>
 </html>
