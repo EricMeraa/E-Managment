@@ -1,0 +1,91 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+enum UserRole {
+  CUSTOMER
+  ADMIN
+}
+
+enum OrderStatus {
+  PENDING
+  CONFIRMED
+  CANCELLED
+}
+
+model User {
+  id           String             @id @default(uuid())
+  name         String             @db.VarChar(120)
+  email        String             @unique @db.VarChar(150)
+  passwordHash String             @map("password_hash") @db.VarChar(255)
+  role         UserRole           @default(CUSTOMER)
+  createdAt    DateTime           @default(now()) @map("created_at")
+  orders       Order[]
+  reservations StockReservation[]
+
+  @@map("users")
+}
+
+model Product {
+  id           String             @id
+  name         String
+  brand        String
+  size         String
+  color        String
+  category     String
+  price        Float
+  stock        Int
+  imageUrl     String?            @map("image_url")
+  isActive     Boolean            @default(true) @map("is_active")
+  isNew        Boolean            @default(true) @map("is_new")
+  createdAt    DateTime           @default(now()) @map("created_at")
+  reservations StockReservation[]
+  orderItems   OrderItem[]
+
+  @@map("products")
+}
+
+model StockReservation {
+  id        String   @id @default(uuid())
+  productId String   @map("product_id")
+  userId    String   @map("user_id")
+  quantity  Int
+  expiresAt DateTime @map("expires_at")
+  createdAt DateTime @default(now()) @map("created_at")
+  product   Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([productId, expiresAt])
+  @@map("stock_reservations")
+}
+
+model Order {
+  id            String      @id @default(uuid())
+  userId        String      @map("user_id")
+  totalAmount   Decimal     @map("total_amount") @db.Decimal(10, 2)
+  paymentMethod String      @map("payment_method") @db.VarChar(60)
+  status        OrderStatus @default(CONFIRMED)
+  createdAt     DateTime    @default(now()) @map("created_at")
+  user          User        @relation(fields: [userId], references: [id])
+  items         OrderItem[]
+
+  @@index([status, createdAt])
+  @@map("orders")
+}
+
+model OrderItem {
+  id        String  @id @default(uuid())
+  orderId   String  @map("order_id")
+  productId String  @map("product_id")
+  quantity  Int
+  unitPrice Decimal @map("unit_price") @db.Decimal(10, 2)
+  order     Order   @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  product   Product @relation(fields: [productId], references: [id])
+
+  @@map("order_items")
+}

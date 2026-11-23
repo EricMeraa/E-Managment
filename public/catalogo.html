@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>E-MANAGMENT | Catálogo de Ropa</title>
+  <link rel="stylesheet" href="/styles.css?v=7" />
+</head>
+<body>
+  <header class="hero-topbar" style="background: #14100f; position: sticky; top: 0; z-index: 30;">
+    <div class="topbar-side left">
+      <a href="/index.html" class="hero-nav-btn">Inicio</a>
+      <button id="btnFilterWoman" class="hero-nav-btn" type="button">Mujer</button>
+      <button id="btnFilterMan" class="hero-nav-btn" type="button">Hombre</button>
+      <button id="btnAllProducts" class="hero-nav-btn active" type="button">Colección</button>
+      <button id="btnNewProducts" class="hero-nav-btn" type="button">Nuevo</button>
+    </div>
+
+    <div class="topbar-side right">
+      <button id="btnAdminPanel" class="hero-nav-btn" type="button" style="display: none;">Panel Admin</button>
+      <span id="userBadge" class="hero-user-badge" style="display: none;"></span>
+      <button id="btnOpenAuth" class="hero-nav-btn" type="button">Iniciar sesión</button>
+      <button id="btnLogout" class="hero-nav-btn" type="button" style="display: none;">Salir</button>
+      <button id="btnOpenCart" class="hero-cart-btn" type="button">
+        Carrito (<span id="cartCount">0</span>)
+      </button>
+    </div>
+  </header>
+
+  <div id="statusBanner" class="status-banner" role="status" aria-live="polite"></div>
+
+  <main class="main-container" id="catalogSection">
+    <section class="catalog-section">
+      <div class="catalog-toolbar">
+        <div>
+          <p class="eyebrow" id="catalogEyebrow">CATÁLOGO GENERAL</p>
+          <h1 id="catalogTitle" style="margin: 0; font-size: 24px; font-weight: 500;">Todas las prendas</h1>
+        </div>
+        <div class="toolbar-right">
+          <button id="btnResetFilters" class="btn-text" type="button">Ver todo</button>
+          <p class="catalog-count" id="catalogCount">0 piezas</p>
+        </div>
+      </div>
+
+      <div id="productsContainer" class="product-grid"></div>
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    <div class="footer-inner">
+      <div>
+        <span class="footer-brand">E-MANAGMENT</span>
+        <p class="footer-note">Plataforma de ropa · Bloqueo temporal de 3 minutos al reservar[cite: 17, 36].</p>
+      </div>
+      <p class="footer-note">Inicio de sesión obligatorio para comprar[cite: 27, 33].</p>
+    </div>
+  </footer>
+
+  <div id="overlayBackdrop" class="backdrop" style="display: none;"></div>
+
+  <aside id="cartDrawer" class="drawer" aria-label="Carrito de compras" aria-hidden="true">
+    <div class="drawer-header">
+      <div>
+        <p class="eyebrow">SELECCIÓN ACTUAL</p>
+        <h2>Carrito de compras</h2>
+      </div>
+      <button id="btnCloseCart" class="btn-text" type="button">Cerrar</button>
+    </div>
+
+    <p class="reservation-note">
+      Reserva temporal de inventario de 3 minutos al agregar prendas[cite: 17, 36].
+    </p>
+
+    <div id="cartStatusBanner" class="inline-alert drawer-alert" role="alert" aria-live="polite"></div>
+
+    <div id="cartItems" class="drawer-body"></div>
+
+    <div class="drawer-footer">
+      <div class="total-row">
+        <span>Total</span>
+        <strong id="cartTotal">$0.00</strong>
+      </div>
+
+      <div class="field-group">
+        <label for="paymentMethod">Método de pago</label>
+        <select id="paymentMethod">
+          <option value="TARJETA">Tarjeta</option>
+          <option value="TRANSFERENCIA">Transferencia</option>
+          <option value="EFECTIVO">Efectivo</option>
+        </select>
+      </div>
+
+      <button id="btnCheckout" class="btn-primary full-width" type="button">
+        Finalizar compra
+      </button>
+    </div>
+  </aside>
+
+  <div id="authModal" class="modal" role="dialog" aria-modal="true" aria-labelledby="authTitle" style="display: none;">
+    <div class="modal-card">
+      <div class="modal-header">
+        <p class="eyebrow">ACCESO A CUENTA</p>
+        <button id="btnCloseAuth" class="btn-text" type="button">Cerrar</button>
+      </div>
+
+      <div class="auth-tabs">
+        <button id="tabLogin" class="auth-tab active" type="button">Iniciar sesión</button>
+        <button id="tabRegister" class="auth-tab" type="button">Registrarse</button>
+      </div>
+
+      <h2 id="authTitle">Iniciar sesión</h2>
+
+      <form id="authForm" class="modal-form">
+        <div id="nameFieldGroup" class="field-group" style="display: none;">
+          <label for="authName">Nombre completo</label>
+          <input id="authName" type="text" placeholder="Nombre completo" autocomplete="name" />
+        </div>
+
+        <div class="field-group">
+          <label for="authEmail">Correo electrónico</label>
+          <input id="authEmail" type="email" placeholder="correo@ejemplo.com" autocomplete="email" />
+        </div>
+
+        <div class="field-group">
+          <label for="authPassword">Contraseña</label>
+          <input id="authPassword" type="password" placeholder="Mínimo 6 caracteres" autocomplete="current-password" />
+        </div>
+
+        <div id="roleFieldGroup" class="field-group" style="display: none;">
+          <label for="authRole">Tipo de cuenta</label>
+          <select id="authRole">
+            <option value="CUSTOMER">Cliente</option>
+            <option value="ADMIN">Administrador de marca</option>
+          </select>
+        </div>
+
+        <div id="authStatusBanner" class="inline-alert" role="alert" aria-live="polite"></div>
+
+        <button id="btnAuthSubmit" class="btn-primary full-width" type="submit">Entrar</button>
+      </form>
+    </div>
+  </div>
+
+  <script src="/catalogo.js?v=1"></script>
+</body>
+</html>

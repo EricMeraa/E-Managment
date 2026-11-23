@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>E-Managment · Panel de Administración</title>
+  <link rel="stylesheet" href="/admin.css" />
+</head>
+<body>
+  <header class="admin-topbar">
+    <div class="admin-brand">
+      <a href="/" class="brand-link">E-MANAGMENT</a>
+      <span class="role-pill">PANEL ADMINISTRATIVO</span>
+    </div>
+
+    <nav class="admin-nav" aria-label="Navegación administrativa">
+      <button type="button" id="tabInventory" class="nav-tab active">Inventario (Alta / Baja)</button>
+      <button type="button" id="tabEarnings" class="nav-tab">Ganancias y Ventas</button>
+    </nav>
+
+    <div class="admin-actions">
+      <span id="adminUserBadge" class="user-badge"></span>
+      <a href="/" class="btn-secondary">Ver Tienda</a>
+      <button type="button" id="btnAdminLogout" class="btn-ghost">Cerrar sesión</button>
+    </div>
+  </header>
+
+  <main class="admin-shell">
+    <div id="adminStatusBanner" class="status-banner" role="status" aria-live="polite"></div>
+
+    <!-- SECCIÓN 1: GESTIÓN DE INVENTARIO (AGREGAR Y ELIMINAR) -->
+    <section id="viewInventory" class="admin-view">
+      <div class="section-header">
+        <div>
+          <p class="eyebrow">UC-05 · MANTENIMIENTO DE CATÁLOGO</p>
+          <h1>Gestión de Prendas</h1>
+        </div>
+        <span id="inventorySummaryCount" class="count-pill">0 prendas activas</span>
+      </div>
+
+      <div class="inventory-layout">
+        <!-- Formulario de alta -->
+        <article class="panel-card">
+          <h2>Agregar nueva prenda</h2>
+          <p class="card-subtitle">Publica artículos con fotografía directamente en la colección de la tienda.</p>
+
+          <form id="adminCreateForm" class="admin-form" enctype="multipart/form-data">
+            <label class="field">
+              <span>Fotografía de la prenda (JPG, PNG o WEBP · máx. 3 MB)</span>
+              <input type="file" id="prodImage" name="image" accept="image/jpeg,image/png,image/webp" />
+            </label>
+
+            <div id="imagePreviewBox" class="image-preview-box" style="display: none;">
+              <img id="imagePreviewImg" alt="Vista previa de la prenda" />
+              <button type="button" id="btnClearImage" class="btn-ghost btn-xs">Quitar imagen</button>
+            </div>
+
+            <label class="field">
+              <span>Nombre de la prenda</span>
+              <input type="text" id="prodName" placeholder="Ej. Sudadera Oversize Noir" required />
+            </label>
+
+            <div class="field-row">
+              <label class="field">
+                <span>Marca</span>
+                <input type="text" id="prodBrand" placeholder="Ej. E-Managment Studio" required />
+              </label>
+
+              <label class="field">
+                <span>Categoría</span>
+                <select id="prodCategory" required>
+                  <option value="Playeras Hombre">Playeras Hombre</option>
+                  <option value="Playeras Mujer">Playeras Mujer</option>
+                  <option value="Sudaderas Hombre">Sudaderas Hombre</option>
+                  <option value="Sudaderas Mujer">Sudaderas Mujer</option>
+                  <option value="Pantalones Hombre">Pantalones Hombre</option>
+                  <option value="Pantalones Mujer">Pantalones Mujer</option>
+                  <option value="Chamarras Unisex">Chamarras Unisex</option>
+                </select>
+              </label>
+            </div>
+
+            <div class="field-row">
+              <label class="field">
+                <span>Talla</span>
+                <select id="prodSize" required>
+                  <option value="XS">XS</option>
+                  <option value="S">S</option>
+                  <option value="M" selected>M</option>
+                  <option value="L">L</option>
+                  <option value="XL">XL</option>
+                </select>
+              </label>
+
+              <label class="field">
+                <span>Color</span>
+                <input type="text" id="prodColor" placeholder="Ej. Negro / Marfil" required />
+              </label>
+            </div>
+
+            <div class="field-row">
+              <label class="field">
+                <span>Precio (MXN)</span>
+                <input type="number" id="prodPrice" min="1" step="0.01" placeholder="599.00" required />
+              </label>
+
+              <label class="field">
+                <span>Existencias iniciales</span>
+                <input type="number" id="prodStock" min="0" step="1" placeholder="15" required />
+              </label>
+            </div>
+
+            <label class="checkbox-field">
+              <input type="checkbox" id="prodIsNew" checked />
+              <span>Destacar en la sección "Nuevo"</span>
+            </label>
+
+            <button type="submit" id="btnCreateProduct" class="btn-primary full-width">
+              Publicar prenda en inventario
+            </button>
+          </form>
+        </article>
+
+        <!-- Listado y eliminación -->
+        <article class="panel-card">
+          <div class="card-header-inline">
+            <div>
+              <h2>Inventario activo</h2>
+              <p class="card-subtitle">Consulta existencias actuales o da de baja prendas del catálogo.</p>
+            </div>
+            <input
+              type="search"
+              id="inventorySearch"
+              class="search-input"
+              placeholder="Buscar por nombre, marca o color..."
+            />
+          </div>
+
+          <div class="table-wrapper">
+            <table class="inventory-table">
+              <thead>
+                <tr>
+                  <th>Foto</th>
+                  <th>Prenda</th>
+                  <th>Categoría</th>
+                  <th>Talla / Color</th>
+                  <th>Precio</th>
+                  <th>Stock</th>
+                  <th>Estado</th>
+                  <th>Acción</th>
+                </tr>
+              </thead>
+              <tbody id="adminProductsBody">
+                <tr>
+                  <td colspan="8" class="empty-cell">Cargando inventario...</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </article>
+      </div>
+    </section>
+
+    <!-- SECCIÓN 2: GANANCIAS Y REPORTE FINANCIERO -->
+    <section id="viewEarnings" class="admin-view" style="display: none;">
+      <div class="section-header">
+        <div>
+          <p class="eyebrow">UC-04 · CONSULTA DE GANANCIAS</p>
+          <h1>Resumen Financiero y Ventas</h1>
+        </div>
+        <button type="button" id="btnRefreshEarnings" class="btn-secondary">Actualizar reporte</button>
+      </div>
+
+      <div id="earningsMetricsGrid" class="metrics-grid">
+        <div class="metric-card"><span>Ventas confirmadas</span><strong>0</strong></div>
+        <div class="metric-card"><span>Prendas vendidas</span><strong>0</strong></div>
+        <div class="metric-card"><span>Ganancias acumuladas</span><strong>$0.00</strong></div>
+        <div class="metric-card"><span>Unidades disponibles</span><strong>0</strong></div>
+      </div>
+
+      <article class="panel-card margin-top">
+        <h2>Desglose de valor por prenda en existencia</h2>
+        <p class="card-subtitle">Valor potencial del inventario disponible actualmente en tienda.</p>
+        <div class="table-wrapper">
+          <table class="inventory-table">
+            <thead>
+              <tr>
+                <th>Prenda</th>
+                <th>Marca</th>
+                <th>Precio unitario</th>
+                <th>Stock disponible</th>
+                <th>Valor en inventario</th>
+              </tr>
+            </thead>
+            <tbody id="inventoryValuationBody">
+              <tr>
+                <td colspan="5" class="empty-cell">Sin datos disponibles.</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </article>
+    </section>
+  </main>
+
+  <script src="/admin.js"></script>
+</body>
+</html>
