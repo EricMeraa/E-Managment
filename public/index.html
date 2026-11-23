@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>E-MANAGMENT | Inicio</title>
-  <link rel="stylesheet" href="/styles.css?v=6" />
+  <link rel="stylesheet" href="/styles.css?v=7" />
 </head>
 <body>
   <section class="start-hero" id="startHero" aria-label="Portada principal">
@@ -168,21 +168,27 @@
 
   <div id="logoutConfirmModal" class="modal" role="dialog" aria-modal="true" aria-labelledby="logoutConfirmTitle" style="display: none;">
     <div class="modal-card">
+      <div class="modal-accent-bar" aria-hidden="true"></div>
       <div class="modal-header">
-        <p class="eyebrow">CONFIRMACIÓN DE SESIÓN</p>
+        <span class="modal-eyebrow-wrap">
+          <span class="modal-dot" aria-hidden="true"></span>
+          <span class="eyebrow">SALIDA DE SESIÓN</span>
+        </span>
         <button id="btnCancelLogoutTop" class="btn-text" type="button">Cerrar</button>
       </div>
 
-      <h2 id="logoutConfirmTitle">¿Estás seguro de cerrar sesión?</h2>
-      <p class="footer-note">Se cerrará tu sesión actual en E-Managment.</p>
+      <h2 id="logoutConfirmTitle" class="modal-title">¿Estás seguro de cerrar sesión?</h2>
+      <p class="modal-desc">
+        Se cerrará tu sesión actual en E-Managment. Podrás volver a iniciar sesión cuando lo necesites.
+      </p>
 
-      <div class="modal-actions" style="display: flex; gap: 10px; justify-content: flex-end; margin-top: 16px;">
-        <button id="btnCancelLogout" class="btn-text" type="button">Cancelar</button>
+      <div class="modal-actions">
+        <button id="btnCancelLogout" class="btn-secondary" type="button">Cancelar</button>
         <button id="btnConfirmLogout" class="btn-primary" type="button">Sí, cerrar sesión</button>
       </div>
     </div>
   </div>
 
-  <script src="/app.js?v=10"></script>
+  <script src="/app.js?v=11"></script>
 </body>
 </html>

@@ -4,6 +4,7 @@ const state = {
   cartItems: [],
   authMode: "login",
   authBusy: false,
+  sessionChecked: false,
   isAuthenticated: false,
   userRole: "CUSTOMER",
 };
@@ -270,14 +271,14 @@ function consumeAuthRedirectQuery() {
 
   window.history.replaceState({}, "", "/index.html");
   if (!state.isAuthenticated) {
-    if (nextRaw.startsWith("/catalogo.html")) {
+    if (nextRaw.startsWith("/catalogo")) {
       window.sessionStorage.setItem("e_managment_next_url", nextRaw);
     }
     openAuthModal("login", "Inicia sesión para entrar al catálogo.");
   }
 }
 
-function goToCatalog(options = {}) {
+async function goToCatalog(options = {}) {
   const params = new URLSearchParams();
   if (typeof options.department === "string" && options.department !== "ALL") {
     params.set("dept", options.department);
@@ -288,13 +289,17 @@ function goToCatalog(options = {}) {
   const qs = params.toString();
   const targetUrl = qs ? `/catalogo.html?${qs}` : "/catalogo.html";
 
+  if (!state.sessionChecked) {
+    await restoreSession();
+  }
+
   if (!state.isAuthenticated) {
     window.sessionStorage.setItem("e_managment_next_url", targetUrl);
     openAuthModal("login", "Inicia sesión para entrar al catálogo.");
     return;
   }
 
-  window.location.href = targetUrl;
+  window.location.assign(targetUrl);
 }
 
 function renderNewOnlyMedia(item, brandText, categoryText) {
@@ -588,20 +593,21 @@ async function submitAuth() {
 
     const userLabel = String(data.name || data.email || "Usuario");
     const userRole = String(data.role || "CUSTOMER").toUpperCase();
+    state.sessionChecked = true;
     setAuthenticatedUI(true, userLabel, userRole);
     resetPasswordVisibility();
     closeAllOverlays();
 
     if (userRole === "ADMIN") {
       window.sessionStorage.removeItem("e_managment_next_url");
-      window.location.href = "/admin.html";
+      window.location.assign("/admin.html");
       return;
     }
 
     const pendingNext = window.sessionStorage.getItem("e_managment_next_url");
-    if (pendingNext && pendingNext.startsWith("/catalogo.html")) {
+    if (pendingNext && pendingNext.startsWith("/catalogo")) {
       window.sessionStorage.removeItem("e_managment_next_url");
-      window.location.href = pendingNext;
+      window.location.assign(pendingNext);
       return;
     }
 
@@ -654,7 +660,7 @@ function logoutUser() {
     openLogoutConfirmModal();
     return;
   }
-  if (window.confirm("¿Estás seguro de que deseas cerrar sesión?")) {
+  if (window.confirm("¿Estás seguro de cerrar sesión?")) {
     void performLogout();
   }
 }
@@ -724,42 +730,46 @@ async function checkoutOrder() {
 async function restoreSession() {
   try {
     const res = await fetch("/api/auth/me", { credentials: "same-origin" });
+    state.sessionChecked = true;
     if (!res.ok) {
       setAuthenticatedUI(false);
-      return;
+      return false;
     }
     const user = await parseResponseBody(res);
     const label = String(user?.name || user?.email || "Usuario");
     const role = String(user?.role || "CUSTOMER").toUpperCase();
     setAuthenticatedUI(true, label, role);
+    return true;
   } catch (_err) {
+    state.sessionChecked = true;
     setAuthenticatedUI(false);
+    return false;
   }
 }
 
-document.getElementById("btnFilterWoman")?.addEventListener("click", () => goToCatalog({ department: "WOMAN" }));
-document.getElementById("btnFilterMan")?.addEventListener("click", () => goToCatalog({ department: "MAN" }));
-document.getElementById("btnAllProducts")?.addEventListener("click", () => goToCatalog({ onlyNew: false, department: "ALL" }));
-document.getElementById("btnNewProducts")?.addEventListener("click", () => goToCatalog({ onlyNew: true }));
-document.getElementById("btnViewAllNew")?.addEventListener("click", () => goToCatalog({ onlyNew: true }));
+document.getElementById("btnFilterWoman")?.addEventListener("click", () => void goToCatalog({ department: "WOMAN" }));
+document.getElementById("btnFilterMan")?.addEventListener("click", () => void goToCatalog({ department: "MAN" }));
+document.getElementById("btnAllProducts")?.addEventListener("click", () => void goToCatalog({ onlyNew: false, department: "ALL" }));
+document.getElementById("btnNewProducts")?.addEventListener("click", () => void goToCatalog({ onlyNew: true }));
+document.getElementById("btnViewAllNew")?.addEventListener("click", () => void goToCatalog({ onlyNew: true }));
 document.getElementById("brandCatalogLink")?.addEventListener("click", (event) => {
   event.preventDefault();
-  goToCatalog({ onlyNew: false, department: "ALL" });
+  void goToCatalog({ onlyNew: false, department: "ALL" });
 });
 document.getElementById("btnEnterCatalog")?.addEventListener("click", (event) => {
   event.preventDefault();
-  goToCatalog({ onlyNew: false, department: "ALL" });
+  void goToCatalog({ onlyNew: false, department: "ALL" });
 });
 
 document.getElementById("newOnlyContainer")?.addEventListener("click", (event) => {
   const target = event.target instanceof Element ? event.target.closest("[data-open-new-catalog]") : null;
   if (target) {
-    goToCatalog({ onlyNew: true });
+    void goToCatalog({ onlyNew: true });
   }
 });
 
 document.getElementById("btnAdminPanel")?.addEventListener("click", () => {
-  window.location.href = "/admin.html";
+  window.location.assign("/admin.html");
 });
 
 document.getElementById("btnOpenCart")?.addEventListener("click", () => {
