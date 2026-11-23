@@ -203,6 +203,25 @@
     </section>
   </main>
 
+  <div id="overlayBackdrop" class="backdrop" style="display: none;"></div>
+
+  <div id="logoutConfirmModal" class="modal" role="dialog" aria-modal="true" aria-labelledby="logoutConfirmTitle" style="display: none;">
+    <div class="modal-card">
+      <div class="modal-header">
+        <p class="eyebrow">CONFIRMACIÓN DE SESIÓN</p>
+        <button type="button" id="btnCancelLogoutTop" class="btn-ghost btn-xs">Cerrar</button>
+      </div>
+
+      <h2 id="logoutConfirmTitle">¿Estás seguro de cerrar sesión?</h2>
+      <p class="card-subtitle">Se cerrará tu sesión actual del Panel de Administración.</p>
+
+      <div class="modal-actions" style="display: flex; gap: 10px; justify-content: flex-end; margin-top: 16px;">
+        <button type="button" id="btnCancelLogout" class="btn-ghost">Cancelar</button>
+        <button type="button" id="btnConfirmLogout" class="btn-primary">Sí, cerrar sesión</button>
+      </div>
+    </div>
+  </div>
+
   <script src="/admin.js"></script>
 </body>
 </html>

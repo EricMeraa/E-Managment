@@ -2,6 +2,7 @@ const adminState = {
   products: [],
   searchQuery: "",
   createBusy: false,
+  logoutBusy: false,
   editingId: null,
   removeExistingImage: false,
   deletingIds: new Set(),
@@ -14,6 +15,13 @@ function showAdminStatus(message, isError = false) {
   banner.className = isError ? "status-banner err" : "status-banner ok";
 }
 
+function clearAdminStatus() {
+  const banner = document.getElementById("adminStatusBanner");
+  if (!banner) return;
+  banner.textContent = "";
+  banner.className = "status-banner";
+}
+
 async function parseJsonSafe(res) {
   const raw = await res.text();
   if (!raw) return {};
@@ -22,6 +30,75 @@ async function parseJsonSafe(res) {
     return parsed !== null && typeof parsed === "object" ? parsed : {};
   } catch (_err) {
     return { error: raw };
+  }
+}
+
+function isLogoutConfirmOpen() {
+  const modal = document.getElementById("logoutConfirmModal");
+  return Boolean(modal && modal.style.display !== "none" && modal.style.display !== "");
+}
+
+function openLogoutConfirmModal() {
+  clearAdminStatus();
+  const backdrop = document.getElementById("overlayBackdrop");
+  const modal = document.getElementById("logoutConfirmModal");
+  if (backdrop) backdrop.style.display = "block";
+  if (modal) modal.style.display = "flex";
+  document.getElementById("btnCancelLogout")?.focus();
+}
+
+function closeLogoutConfirmModal() {
+  const modal = document.getElementById("logoutConfirmModal");
+  const backdrop = document.getElementById("overlayBackdrop");
+  if (modal) modal.style.display = "none";
+  if (backdrop) backdrop.style.display = "none";
+}
+
+async function confirmAdminLogout() {
+  if (adminState.logoutBusy) return;
+  adminState.logoutBusy = true;
+
+  const confirmBtn = document.getElementById("btnConfirmLogout");
+  const cancelBtn = document.getElementById("btnCancelLogout");
+  if (confirmBtn) confirmBtn.disabled = true;
+  if (cancelBtn) cancelBtn.disabled = true;
+
+  try {
+    const res = await fetch("/api/auth/logout", {
+      method: "POST",
+      credentials: "same-origin",
+    });
+
+    if (res.ok) {
+      closeLogoutConfirmModal();
+      window.location.href = "/";
+      return;
+    }
+
+    const data = await parseJsonSafe(res);
+    closeLogoutConfirmModal();
+    showAdminStatus(
+      data?.error || `No se pudo cerrar sesión (HTTP ${res.status}).`,
+      true
+    );
+  } catch (_err) {
+    closeLogoutConfirmModal();
+    showAdminStatus("Sin conexión con el servidor al cerrar sesión.", true);
+  } finally {
+    adminState.logoutBusy = false;
+    if (confirmBtn) confirmBtn.disabled = false;
+    if (cancelBtn) cancelBtn.disabled = false;
+  }
+}
+
+function requestAdminLogout() {
+  const modal = document.getElementById("logoutConfirmModal");
+  if (modal) {
+    openLogoutConfirmModal();
+    return;
+  }
+  if (window.confirm("¿Estás seguro de cerrar sesión?")) {
+    void confirmAdminLogout();
   }
 }
 
@@ -489,11 +566,27 @@ document.getElementById("adminProductsBody")?.addEventListener("click", async (e
   }
 });
 
-document.getElementById("btnAdminLogout")?.addEventListener("click", async () => {
-  try {
-    await fetch("/api/auth/logout", { method: "POST", credentials: "same-origin" });
-  } finally {
-    window.location.href = "/";
+document.getElementById("btnAdminLogout")?.addEventListener("click", (event) => {
+  event.preventDefault();
+  requestAdminLogout();
+});
+
+document.getElementById("btnConfirmLogout")?.addEventListener("click", async () => {
+  await confirmAdminLogout();
+});
+
+document.getElementById("btnCancelLogout")?.addEventListener("click", closeLogoutConfirmModal);
+document.getElementById("btnCancelLogoutTop")?.addEventListener("click", closeLogoutConfirmModal);
+
+document.getElementById("overlayBackdrop")?.addEventListener("click", () => {
+  if (isLogoutConfirmOpen()) {
+    closeLogoutConfirmModal();
+  }
+});
+
+document.addEventListener("keydown", (event) => {
+  if (event.key === "Escape" && isLogoutConfirmOpen()) {
+    closeLogoutConfirmModal();
   }
 });
 
