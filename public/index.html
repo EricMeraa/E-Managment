@@ -63,6 +63,8 @@
         </div>
       </div>
 
+      <div id="adminStatusBanner" class="inline-alert" role="alert" aria-live="polite"></div>
+
       <div id="earningsContent" class="earnings-grid"></div>
 
       <div class="admin-divider"></div>
@@ -183,6 +185,8 @@
       Reserva temporal de inventario de 3 minutos al agregar prendas.
     </p>
 
+    <div id="cartStatusBanner" class="inline-alert drawer-alert" role="alert" aria-live="polite"></div>
+
     <div id="cartItems" class="drawer-body"></div>
 
     <div class="drawer-footer">
@@ -233,7 +237,7 @@
 
         <div class="field-group">
           <label for="authPassword">Contraseña</label>
-          <input id="authPassword" type="password" placeholder="Mínimo 6 caracteres" autocomplete="current-password" />
+          <input id="authPassword" type="password" placeholder="Mínimo 6 caracteres" minlength="6" autocomplete="current-password" />
         </div>
 
         <div id="roleFieldGroup" class="field-group" style="display: none;">
@@ -243,6 +247,8 @@
             <option value="ADMIN">Administrador de marca</option>
           </select>
         </div>
+
+        <div id="authStatusBanner" class="inline-alert" role="alert" aria-live="polite"></div>
 
         <button id="btnAuthSubmit" class="btn-primary full-width" type="submit">Entrar</button>
       </form>
