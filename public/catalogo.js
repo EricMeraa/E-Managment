@@ -249,6 +249,17 @@ function setAuthenticatedUI(isAuthenticated, label = "", role = "CUSTOMER") {
   }
 }
 
+function redirectToLoginRequired() {
+  const mainEl = document.getElementById("catalogSection");
+  if (mainEl) {
+    mainEl.style.display = "none";
+  }
+  const target = new URL("/index.html", window.location.origin);
+  target.searchParams.set("authRequired", "1");
+  target.searchParams.set("next", `${window.location.pathname}${window.location.search}`);
+  window.location.replace(target.toString());
+}
+
 function syncNavState() {
   const womanBtn = document.getElementById("btnFilterWoman");
   const manBtn = document.getElementById("btnFilterMan");
@@ -489,7 +500,11 @@ function updateCatalogHeader() {
 async function loadProducts() {
   try {
     const query = state.onlyNew ? "?onlyNew=true" : "";
-    const res = await fetch("/api/products" + query);
+    const res = await fetch("/api/products" + query, { credentials: "same-origin" });
+    if (res.status === 401) {
+      redirectToLoginRequired();
+      return;
+    }
     const data = await parseResponseBody(res);
     if (!res.ok) {
       routeActionMessage(data.error || `No se pudo cargar el catálogo (HTTP ${res.status}).`, true);
@@ -511,7 +526,7 @@ async function loadCart() {
   try {
     const res = await fetch("/api/cart", { credentials: "same-origin" });
     if (res.status === 401) {
-      renderCart({ items: [], total: 0 });
+      redirectToLoginRequired();
       return;
     }
     const data = await parseResponseBody(res);
@@ -544,7 +559,7 @@ async function addToCart(productId) {
     const data = await parseResponseBody(res);
 
     if (res.status === 401) {
-      openAuthModal("login", "Inicia sesión para agregar prendas al carrito.");
+      redirectToLoginRequired();
       return;
     }
 
@@ -577,7 +592,7 @@ async function removeFromCart(productId) {
     });
     const data = await parseResponseBody(res);
     if (res.status === 401) {
-      openAuthModal("login", "Debes iniciar sesión para modificar el carrito.");
+      redirectToLoginRequired();
       return;
     }
     if (!res.ok) {
@@ -693,7 +708,7 @@ async function logoutUser() {
       setAuthenticatedUI(false);
       renderCart({ items: [], total: 0 });
       closeAllOverlays();
-      showStatus("Sesión cerrada.", false);
+      redirectToLoginRequired();
     } else {
       const data = await parseResponseBody(res);
       routeActionMessage(data.error || `No se pudo cerrar sesión (HTTP ${res.status}).`, true);
@@ -734,7 +749,7 @@ async function checkoutOrder() {
     const data = await parseResponseBody(res);
 
     if (res.status === 401) {
-      openAuthModal("login", data.error || "Inicia sesión antes de finalizar tu compra.");
+      redirectToLoginRequired();
       return;
     }
 
@@ -771,18 +786,24 @@ async function restoreSession() {
     const res = await fetch("/api/auth/me", { credentials: "same-origin" });
     if (!res.ok) {
       setAuthenticatedUI(false);
-      return;
+      return false;
     }
     const user = await parseResponseBody(res);
     const label = String(user?.name || user?.email || "Usuario");
     const role = String(user?.role || "CUSTOMER").toUpperCase();
     setAuthenticatedUI(true, label, role);
+    return true;
   } catch (_err) {
     setAuthenticatedUI(false);
+    return false;
   }
 }
 
 async function applyFilter(options = {}) {
+  if (!state.isAuthenticated) {
+    redirectToLoginRequired();
+    return;
+  }
   if (typeof options.onlyNew === "boolean") state.onlyNew = options.onlyNew;
   if (typeof options.department === "string") state.department = options.department;
   updateUrlQuery();
@@ -851,8 +872,12 @@ document.addEventListener("keydown", (event) => {
 });
 
 (async function init() {
+  const ok = await restoreSession();
+  if (!ok) {
+    redirectToLoginRequired();
+    return;
+  }
   readInitialFiltersFromUrl();
   await loadProducts();
-  await restoreSession();
   await loadCart();
 })();
