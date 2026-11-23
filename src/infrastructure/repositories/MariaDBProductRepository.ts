@@ -71,28 +71,6 @@ export class MariaDBProductRepository implements IProductRepository {
     });
   }
 
-  public async getAvailableStockForUser(productId: string, userId: string): Promise<number> {
-    await this.releaseExpiredReservations();
-    const now = new Date();
-    const product = await prisma.product.findUnique({
-      where: { id: productId },
-    });
-    if (!product || !product.isActive) {
-      return 0;
-    }
-
-    const otherReservationsAgg = await prisma.stockReservation.aggregate({
-      where: {
-        productId,
-        expiresAt: { gt: now },
-        NOT: { userId },
-      },
-      _sum: { quantity: true },
-    });
-    const reservedByOthers = otherReservationsAgg._sum.quantity ?? 0;
-    return Math.max(0, product.stock - reservedByOthers);
-  }
-
   public async getProductById(productId: string): Promise<Product | null> {
     const row = await prisma.product.findUnique({
       where: { id: productId },

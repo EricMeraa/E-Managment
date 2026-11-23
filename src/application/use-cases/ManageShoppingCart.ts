@@ -13,13 +13,8 @@ export interface CartSnapshot {
   total: number;
 }
 
-type ProductRepoWithAvailability = IProductRepository & {
-  getAvailableStockForUser?: (productId: string, userId: string) => Promise<number>;
-  releaseExpiredReservations?: () => Promise<void>;
-};
-
 export class ManageShoppingCart {
-  private readonly productRepository: ProductRepoWithAvailability;
+  private readonly productRepository: IProductRepository;
   private readonly cartsByUser: Map<string, Map<string, number>>;
   private readonly lockMinutes = 3;
 
@@ -29,28 +24,23 @@ export class ManageShoppingCart {
   }
 
   public async getCart(userId: string): Promise<CartSnapshot> {
-    if (typeof this.productRepository.releaseExpiredReservations === "function") {
-      await this.productRepository.releaseExpiredReservations();
-    }
-
     const userCart = this.cartsByUser.get(userId) ?? new Map<string, number>();
     const items: CartItem[] = [];
     let total = 0;
 
     for (const [productId, quantity] of userCart.entries()) {
       const product = await this.productRepository.getProductById(productId);
-      if (!product || !product.isActive || product.stock <= 0) {
+      if (!product || !product.isActive) {
         userCart.delete(productId);
         continue;
       }
-      const safeQty = Math.min(quantity, product.stock);
-      const subtotal = Number((product.price * safeQty).toFixed(2));
+      const subtotal = Number((product.price * quantity).toFixed(2));
       total += subtotal;
       items.push({
         productId: product.id,
         name: product.name,
         unitPrice: product.price,
-        quantity: safeQty,
+        quantity,
         subtotal,
       });
     }
@@ -62,28 +52,20 @@ export class ManageShoppingCart {
   }
 
   public async addItem(userId: string, productId: string, quantity = 1): Promise<CartSnapshot> {
-    if (!productId || !productId.trim()) {
-      throw new Error("El identificador de la prenda es obligatorio.");
-    }
     if (!Number.isInteger(quantity) || quantity <= 0) {
-      throw new Error("La cantidad debe ser un número entero mayor a cero.");
+      throw new Error("La cantidad debe ser un numero entero mayor a cero.");
     }
 
     const product = await this.productRepository.getProductById(productId);
-    if (!product || !product.isActive) {
-      throw new Error("La prenda seleccionada no está disponible.");
+    if (!product || !product.isActive || !product.isAvailableForSale(quantity)) {
+      throw new Error("La prenda seleccionada no esta disponible o no tiene stock suficiente.");
     }
 
     const userCart = this.cartsByUser.get(userId) ?? new Map<string, number>();
     const currentQty = userCart.get(productId) ?? 0;
     const nextQty = currentQty + quantity;
 
-    const maxAllowedForUser =
-      typeof this.productRepository.getAvailableStockForUser === "function"
-        ? await this.productRepository.getAvailableStockForUser(productId, userId)
-        : product.stock;
-
-    if (nextQty > maxAllowedForUser || !product.isAvailableForSale(nextQty)) {
+    if (!product.isAvailableForSale(nextQty)) {
       throw new Error("Inventario insuficiente para la cantidad solicitada.");
     }
 
