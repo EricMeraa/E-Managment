@@ -3,6 +3,7 @@ const state = {
   department: "ALL",
   allCatalogCache: [],
   busyProducts: new Set(),
+  selectedQuantities: new Map(),
   checkoutBusy: false,
   logoutBusy: false,
   cartItems: [],
@@ -340,6 +341,26 @@ function filterCatalogItems(products) {
   });
 }
 
+function getSelectedQuantity(productId, stockNum) {
+  if (stockNum <= 0) return 1;
+  const saved = Number(state.selectedQuantities.get(String(productId)) ?? 1);
+  if (!Number.isInteger(saved) || saved < 1) return 1;
+  return Math.min(saved, stockNum);
+}
+
+function setSelectedQuantity(productId, rawValue, stockNum) {
+  const key = String(productId);
+  if (stockNum <= 0) {
+    state.selectedQuantities.set(key, 1);
+    return 1;
+  }
+  let parsed = Number.parseInt(String(rawValue ?? "1"), 10);
+  if (Number.isNaN(parsed) || parsed < 1) parsed = 1;
+  if (parsed > stockNum) parsed = stockNum;
+  state.selectedQuantities.set(key, parsed);
+  return parsed;
+}
+
 function renderProductMedia(item, brandText, categoryText) {
   const rawImageUrl = typeof item?.imageUrl === "string" ? item.imageUrl.trim() : "";
   const safeName = escapeHtml(item?.name || "Prenda");
@@ -405,6 +426,7 @@ function renderProducts(products) {
     const brandText = String(item.brand || "E-MANAGMENT");
     const categoryText = String(item.category || "PRENDA");
     const hasImage = typeof item?.imageUrl === "string" && item.imageUrl.trim().length > 0;
+    const chosenQty = getSelectedQuantity(item.id, stockNum);
 
     const badgeMarkup = outOfStock
       ? '<span class="tag-pill sold-out">Agotado</span>'
@@ -417,6 +439,25 @@ function renderProducts(products) {
       : isBusy
       ? "Reservando..."
       : "Agregar al carrito";
+
+    const qtyControlMarkup = outOfStock
+      ? ""
+      : '<div style="display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-bottom: 10px;">' +
+        '<label for="qty-' +
+        escapeHtml(item.id) +
+        '" style="font-size: 11px; text-transform: uppercase; letter-spacing: 0.08em;">Cantidad</label>' +
+        '<input id="qty-' +
+        escapeHtml(item.id) +
+        '" data-qty-id="' +
+        escapeHtml(item.id) +
+        '" type="number" min="1" max="' +
+        escapeHtml(stockNum) +
+        '" value="' +
+        escapeHtml(chosenQty) +
+        '" ' +
+        (isBusy ? "disabled " : "") +
+        'style="width: 78px; padding: 6px 8px; text-align: center;" />' +
+        "</div>";
 
     card.innerHTML =
       "<div>" +
@@ -458,13 +499,16 @@ function renderProducts(products) {
       escapeHtml(item.id) +
       "</p>" +
       "</div>" +
+      "<div>" +
+      qtyControlMarkup +
       '<button type="button" class="btn-outline full-width" data-add-id="' +
       escapeHtml(item.id) +
       '"' +
       (isBusy || outOfStock ? " disabled" : "") +
       ">" +
       buttonLabel +
-      "</button>";
+      "</button>" +
+      "</div>";
 
     container.appendChild(card);
   }
@@ -584,8 +628,13 @@ async function loadCart() {
   }
 }
 
-async function addToCart(productId) {
+async function addToCart(productId, requestedQty = 1) {
   if (state.busyProducts.has(productId)) return;
+
+  const productRecord = state.allCatalogCache.find((p) => String(p.id) === String(productId));
+  const maxStock = productRecord ? Number(productRecord.stock ?? 0) : requestedQty;
+  const qty = setSelectedQuantity(productId, requestedQty, maxStock > 0 ? maxStock : requestedQty);
+
   state.busyProducts.add(productId);
   await loadProducts();
 
@@ -594,7 +643,7 @@ async function addToCart(productId) {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       credentials: "same-origin",
-      body: JSON.stringify({ productId, quantity: 1 }),
+      body: JSON.stringify({ productId, quantity: qty }),
     });
     const data = await parseResponseBody(res);
 
@@ -615,7 +664,11 @@ async function addToCart(productId) {
     clearInlineAlert("cartStatusBanner");
     renderCart(data);
     openCartDrawer();
-    showInlineAlert("cartStatusBanner", "Prenda agregada al carrito (reserva de 3 minutos).", false);
+    showInlineAlert(
+      "cartStatusBanner",
+      `Se ${qty === 1 ? "agregó 1 prenda" : `agregaron ${qty} prendas`} al carrito (reserva de 3 minutos).`,
+      false
+    );
   } catch (_err) {
     routeActionMessage("Sin conexión con el servidor al actualizar el carrito.", true, "cartStatusBanner");
   } finally {
@@ -925,10 +978,24 @@ document.getElementById("btnCancelLogoutTop")?.addEventListener("click", () => c
 
 document.getElementById("btnCheckout")?.addEventListener("click", async () => checkoutOrder());
 
+document.getElementById("productsContainer")?.addEventListener("change", (event) => {
+  const input = event.target instanceof Element ? event.target.closest("[data-qty-id]") : null;
+  if (!input) return;
+  const productId = input.getAttribute("data-qty-id");
+  if (!productId) return;
+  const maxStock = Number(input.getAttribute("max") ?? 1);
+  input.value = String(setSelectedQuantity(productId, input.value, maxStock));
+});
+
 document.getElementById("productsContainer")?.addEventListener("click", async (event) => {
   const target = event.target instanceof Element ? event.target.closest("[data-add-id]") : null;
   const productId = target?.getAttribute("data-add-id");
-  if (productId) await addToCart(productId);
+  if (!productId) return;
+
+  const card = target.closest(".product-card");
+  const qtyInput = card?.querySelector("[data-qty-id]");
+  const requestedQty = qtyInput ? Number(qtyInput.value) : 1;
+  await addToCart(productId, requestedQty);
 });
 
 document.getElementById("cartItems")?.addEventListener("click", async (event) => {
