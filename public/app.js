@@ -253,7 +253,7 @@ function goToCatalog(options = {}) {
   window.location.href = targetUrl;
 }
 
-function renderNewPreviewMedia(item, brandText, categoryText) {
+function renderNewOnlyMedia(item, brandText, categoryText) {
   const rawImageUrl = typeof item?.imageUrl === "string" ? item.imageUrl.trim() : "";
   const safeName = escapeHtml(item?.name || "Prenda");
   const safeBrand = escapeHtml(brandText);
@@ -291,27 +291,28 @@ function renderNewPreviewMedia(item, brandText, categoryText) {
   );
 }
 
-function renderNewPreview(products) {
-  const container = document.getElementById("newProductsContainer");
-  const countEl = document.getElementById("newPreviewCount");
+function renderNewOnlyProducts(products) {
+  const container = document.getElementById("newOnlyContainer");
+  const countEl = document.getElementById("newOnlyCount");
   if (!container) return;
   container.innerHTML = "";
 
-  const list = (Array.isArray(products) ? products : []).filter(
-    (item) => Boolean(item?.isNew) && Number(item?.stock ?? 0) > 0
+  // Solo prendas marcadas como nuevas y con existencia disponible (BR-01)
+  const newOnlyList = (Array.isArray(products) ? products : []).filter(
+    (item) => Boolean(item?.isNew) === true && Number(item?.stock ?? 0) > 0
   );
 
   if (countEl) {
-    countEl.textContent = list.length + (list.length === 1 ? " pieza" : " piezas");
+    countEl.textContent = newOnlyList.length + (newOnlyList.length === 1 ? " pieza" : " piezas");
   }
 
-  if (list.length === 0) {
+  if (newOnlyList.length === 0) {
     container.innerHTML =
-      '<div class="empty-state">No hay prendas nuevas disponibles en este momento.</div>';
+      '<div class="empty-state">No hay prendas nuevas disponibles por ahora.</div>';
     return;
   }
 
-  for (const item of list.slice(0, 6)) {
+  for (const item of newOnlyList) {
     const card = document.createElement("article");
     card.className = "product-card";
     const stockNum = Number(item.stock ?? 0);
@@ -331,7 +332,7 @@ function renderNewPreview(products) {
       escapeHtml(item.size) +
       "</span>" +
       "</div>" +
-      renderNewPreviewMedia(item, brandText, categoryText) +
+      renderNewOnlyMedia(item, brandText, categoryText) +
       '<div class="visual-bottom">' +
       "<span>Color: " +
       escapeHtml(item.color) +
@@ -358,25 +359,25 @@ function renderNewPreview(products) {
       "</p>" +
       "</div>" +
       '<button type="button" class="btn-outline full-width" data-open-new-catalog="1">' +
-      "Ver en catálogo" +
+      "Entrar al catálogo" +
       "</button>";
 
     container.appendChild(card);
   }
 }
 
-async function loadNewPreview() {
+async function loadNewOnlyProducts() {
   try {
     const res = await fetch("/api/products?onlyNew=true", { credentials: "same-origin" });
     if (!res.ok) {
-      renderNewPreview([]);
+      renderNewOnlyProducts([]);
       return;
     }
     const data = await parseResponseBody(res);
     const items = Array.isArray(data) ? data : [];
-    renderNewPreview(items);
+    renderNewOnlyProducts(items);
   } catch (_err) {
-    renderNewPreview([]);
+    renderNewOnlyProducts([]);
   }
 }
 
@@ -683,7 +684,7 @@ document.getElementById("btnEnterCatalog")?.addEventListener("click", (event) =>
   goToCatalog({ onlyNew: false, department: "ALL" });
 });
 
-document.getElementById("newProductsContainer")?.addEventListener("click", (event) => {
+document.getElementById("newOnlyContainer")?.addEventListener("click", (event) => {
   const target = event.target instanceof Element ? event.target.closest("[data-open-new-catalog]") : null;
   if (target) {
     goToCatalog({ onlyNew: true });
@@ -736,6 +737,6 @@ document.addEventListener("keydown", (event) => {
 (async function init() {
   await restoreSession();
   consumeAuthRedirectQuery();
-  await loadNewPreview();
+  await loadNewOnlyProducts();
   await loadCart();
 })();
