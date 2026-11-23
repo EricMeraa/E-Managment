@@ -207,16 +207,22 @@
 
   <div id="logoutConfirmModal" class="modal" role="dialog" aria-modal="true" aria-labelledby="logoutConfirmTitle" style="display: none;">
     <div class="modal-card">
+      <div class="modal-accent-bar" aria-hidden="true"></div>
       <div class="modal-header">
-        <p class="eyebrow">CONFIRMACIÓN DE SESIÓN</p>
+        <span class="modal-eyebrow-wrap">
+          <span class="modal-dot" aria-hidden="true"></span>
+          <span class="eyebrow">SALIDA DE SESIÓN</span>
+        </span>
         <button type="button" id="btnCancelLogoutTop" class="btn-ghost btn-xs">Cerrar</button>
       </div>
 
-      <h2 id="logoutConfirmTitle">¿Estás seguro de cerrar sesión?</h2>
-      <p class="card-subtitle">Se cerrará tu sesión actual del Panel de Administración.</p>
+      <h2 id="logoutConfirmTitle" class="modal-title">¿Estás seguro de cerrar sesión?</h2>
+      <p class="modal-desc">
+        Se cerrará tu sesión actual en E-Managment. Podrás volver a iniciar sesión cuando lo necesites.
+      </p>
 
-      <div class="modal-actions" style="display: flex; gap: 10px; justify-content: flex-end; margin-top: 16px;">
-        <button type="button" id="btnCancelLogout" class="btn-ghost">Cancelar</button>
+      <div class="modal-actions">
+        <button type="button" id="btnCancelLogout" class="btn-secondary">Cancelar</button>
         <button type="button" id="btnConfirmLogout" class="btn-primary">Sí, cerrar sesión</button>
       </div>
     </div>

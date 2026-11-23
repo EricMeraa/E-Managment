@@ -3,46 +3,66 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>E-MANAGMENT | Catálogo de Ropa</title>
-  <link rel="stylesheet" href="/styles.css?v=7" />
+  <title>E-MANAGMENT | Inicio</title>
+  <link rel="stylesheet" href="/styles.css?v=6" />
 </head>
 <body>
-  <header class="hero-topbar" style="background: #14100f; position: sticky; top: 0; z-index: 30;">
-    <div class="topbar-side left">
-      <a href="/index.html" class="hero-nav-btn">Inicio</a>
-      <button id="btnFilterWoman" class="hero-nav-btn" type="button">Mujer</button>
-      <button id="btnFilterMan" class="hero-nav-btn" type="button">Hombre</button>
-      <button id="btnAllProducts" class="hero-nav-btn active" type="button">Colección</button>
-      <button id="btnNewProducts" class="hero-nav-btn" type="button">Nuevo</button>
+  <section class="start-hero" id="startHero" aria-label="Portada principal">
+    <div class="hero-backdrop-art" aria-hidden="true">
+      <div class="room-wall"></div>
+      <div class="room-frame"></div>
+      <div class="room-lamp"></div>
+      <div class="room-table"></div>
+      <div class="room-pillow"></div>
     </div>
+    <div class="hero-scrim" aria-hidden="true"></div>
 
-    <div class="topbar-side right">
-      <button id="btnAdminPanel" class="hero-nav-btn" type="button" style="display: none;">Panel Admin</button>
-      <span id="userBadge" class="hero-user-badge" style="display: none;"></span>
-      <button id="btnOpenAuth" class="hero-nav-btn" type="button">Iniciar sesión</button>
-      <button id="btnLogout" class="hero-nav-btn" type="button" style="display: none;">Salir</button>
-      <button id="btnOpenCart" class="hero-cart-btn" type="button">
-        Carrito (<span id="cartCount">0</span>)
-      </button>
+    <header class="hero-topbar">
+      <div class="topbar-side left">
+        <button id="btnFilterWoman" class="hero-nav-btn" type="button">Mujer</button>
+        <button id="btnFilterMan" class="hero-nav-btn" type="button">Hombre</button>
+        <button id="btnAllProducts" class="hero-nav-btn active" type="button">Colección</button>
+        <button id="btnNewProducts" class="hero-nav-btn" type="button">Nuevo</button>
+      </div>
+
+      <div class="topbar-center">
+        <a href="/catalogo.html" id="brandCatalogLink" class="hero-brand-title">E - M A N A G M E N T</a>
+      </div>
+
+      <div class="topbar-side right">
+        <button id="btnAdminPanel" class="hero-nav-btn" type="button" style="display: none;">Panel Admin</button>
+        <span id="userBadge" class="hero-user-badge" style="display: none;"></span>
+        <button id="btnOpenAuth" class="hero-nav-btn" type="button">Iniciar sesión</button>
+        <button id="btnLogout" class="hero-nav-btn" type="button" style="display: none;">Salir</button>
+        <button id="btnOpenCart" class="hero-cart-btn" type="button">
+          Carrito (<span id="cartCount">0</span>)
+        </button>
+      </div>
+    </header>
+
+    <div class="hero-centerpiece">
+      <div class="monogram-me" aria-label="E-Managment Monograma">ME</div>
+      <p class="hero-caption">EDICIÓN CONTEMPORÁNEA · INVENTARIO EN TIEMPO REAL</p>
+      <a href="/catalogo.html" id="btnEnterCatalog" class="hero-cta">Entrar al catálogo</a>
     </div>
-  </header>
+  </section>
 
   <div id="statusBanner" class="status-banner" role="status" aria-live="polite"></div>
 
-  <main class="main-container" id="catalogSection">
-    <section class="catalog-section">
+  <main class="main-container" id="homeMainSection">
+    <section id="newPreviewSection" class="catalog-section" aria-label="Apartado de ropa nueva">
       <div class="catalog-toolbar">
         <div>
-          <p class="eyebrow" id="catalogEyebrow">CATÁLOGO GENERAL</p>
-          <h1 id="catalogTitle" style="margin: 0; font-size: 24px; font-weight: 500;">Todas las prendas</h1>
+          <p class="eyebrow">APARTADO DE NUEVO</p>
+          <h2>Ropa nueva</h2>
         </div>
         <div class="toolbar-right">
-          <button id="btnResetFilters" class="btn-text" type="button">Ver todo</button>
-          <p class="catalog-count" id="catalogCount">0 piezas</p>
+          <button id="btnViewAllNew" class="btn-text" type="button">Ver todo en Nuevo</button>
+          <p class="catalog-count" id="newPreviewCount">0 piezas</p>
         </div>
       </div>
 
-      <div id="productsContainer" class="product-grid"></div>
+      <div id="newProductsContainer" class="product-grid"></div>
     </section>
   </main>
 
@@ -52,7 +72,7 @@
         <span class="footer-brand">E-MANAGMENT</span>
         <p class="footer-note">Plataforma de ropa · Bloqueo temporal de 3 minutos al reservar.</p>
       </div>
-      <p class="footer-note">Inicio de sesión obligatorio para comprar.</p>
+      <p class="footer-note">Inicio de sesión obligatorio para entrar al catálogo y comprar.</p>
     </div>
   </footer>
 
@@ -146,6 +166,6 @@
     </div>
   </div>
 
-  <script src="/catalogo.js?v=1"></script>
+  <script src="/app.js?v=8"></script>
 </body>
 </html>
