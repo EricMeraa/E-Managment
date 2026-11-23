@@ -11,30 +11,6 @@ const state = {
   userRole: "CUSTOMER",
 };
 
-function readInitialFiltersFromUrl() {
-  const params = new URLSearchParams(window.location.search);
-  const rawDept = String(params.get("dept") || "ALL").toUpperCase();
-  if (rawDept === "WOMAN" || rawDept === "MAN") {
-    state.department = rawDept;
-  } else {
-    state.department = "ALL";
-  }
-  state.onlyNew = params.get("onlyNew") === "true";
-}
-
-function updateUrlQuery() {
-  const params = new URLSearchParams();
-  if (state.department !== "ALL") {
-    params.set("dept", state.department);
-  }
-  if (state.onlyNew) {
-    params.set("onlyNew", "true");
-  }
-  const queryStr = params.toString();
-  const nextUrl = queryStr ? `${window.location.pathname}?${queryStr}` : window.location.pathname;
-  window.history.replaceState({}, "", nextUrl);
-}
-
 function escapeHtml(value) {
   return String(value ?? "")
     .replaceAll("&", "&amp;")
@@ -88,16 +64,19 @@ function routeActionMessage(message, isError = true, preferredInlineId = "") {
     if (isError) clearStatus();
     return;
   }
+
   if (isAuthModalOpen()) {
     showInlineAlert("authStatusBanner", message, isError);
     if (isError) clearStatus();
     return;
   }
+
   if (isCartOpen()) {
     showInlineAlert("cartStatusBanner", message, isError);
     if (isError) clearStatus();
     return;
   }
+
   showStatus(message, isError);
 }
 
@@ -227,12 +206,16 @@ function setAuthenticatedUI(isAuthenticated, label = "", role = "CUSTOMER") {
   const openAuthBtn = document.getElementById("btnOpenAuth");
   const logoutBtn = document.getElementById("btnLogout");
   const adminBtn = document.getElementById("btnAdminPanel");
+  const adminSection = document.getElementById("adminSection");
   const badge = document.getElementById("userBadge");
 
   if (openAuthBtn) openAuthBtn.style.display = isAuthenticated ? "none" : "inline-block";
   if (logoutBtn) logoutBtn.style.display = isAuthenticated ? "inline-block" : "none";
   if (adminBtn) {
     adminBtn.style.display = isAuthenticated && state.userRole === "ADMIN" ? "inline-block" : "none";
+  }
+  if (adminSection) {
+    adminSection.style.display = "none";
   }
 
   if (badge) {
@@ -246,162 +229,16 @@ function setAuthenticatedUI(isAuthenticated, label = "", role = "CUSTOMER") {
   }
 }
 
-function syncNavState() {
-  const womanBtn = document.getElementById("btnFilterWoman");
-  const manBtn = document.getElementById("btnFilterMan");
-  const allBtn = document.getElementById("btnAllProducts");
-  const newBtn = document.getElementById("btnNewProducts");
-
-  if (womanBtn) womanBtn.className = state.department === "WOMAN" ? "hero-nav-btn active" : "hero-nav-btn";
-  if (manBtn) manBtn.className = state.department === "MAN" ? "hero-nav-btn active" : "hero-nav-btn";
-  if (allBtn) {
-    allBtn.className = !state.onlyNew && state.department === "ALL" ? "hero-nav-btn active" : "hero-nav-btn";
+function goToCatalog(options = {}) {
+  const params = new URLSearchParams();
+  if (typeof options.department === "string" && options.department !== "ALL") {
+    params.set("dept", options.department);
   }
-  if (newBtn) newBtn.className = state.onlyNew ? "hero-nav-btn active" : "hero-nav-btn";
-}
-
-function filterByDepartment(products) {
-  if (state.department === "ALL") return products;
-  return products.filter((item) => {
-    const text = `${item.category ?? ""} ${item.name ?? ""}`.toLowerCase();
-    if (state.department === "WOMAN") {
-      return text.includes("mujer") || text.includes("woman") || text.includes("femen");
-    }
-    if (state.department === "MAN") {
-      return text.includes("hombre") || text.includes("man") || text.includes("mascul");
-    }
-    return true;
-  });
-}
-
-function renderProductMedia(item, brandText, categoryText) {
-  const rawImageUrl = typeof item?.imageUrl === "string" ? item.imageUrl.trim() : "";
-  const safeName = escapeHtml(item?.name || "Prenda");
-  const safeBrand = escapeHtml(brandText);
-  const safeCategory = escapeHtml(categoryText);
-
-  if (rawImageUrl) {
-    const safeUrl = escapeHtml(rawImageUrl);
-    return (
-      "<img src=\"" +
-      safeUrl +
-      "\" alt=\"" +
-      safeName +
-      "\" class=\"product-visual-img\" loading=\"lazy\" " +
-      "onerror=\"this.classList.add('is-hidden'); const fb = this.nextElementSibling; if (fb) fb.classList.add('is-visible');\" />" +
-      "<div class=\"visual-center product-visual-fallback\">" +
-      "<span class=\"visual-category\">" +
-      safeCategory +
-      "</span>" +
-      "<span class=\"visual-monogram\">" +
-      safeBrand.toUpperCase() +
-      "</span>" +
-      "</div>"
-    );
+  if (typeof options.onlyNew === "boolean" && options.onlyNew) {
+    params.set("onlyNew", "true");
   }
-
-  return (
-    "<div class=\"visual-center\">" +
-    "<span class=\"visual-category\">" +
-    safeCategory +
-    "</span>" +
-    "<span class=\"visual-monogram\">" +
-    safeBrand.toUpperCase() +
-    "</span>" +
-    "</div>"
-  );
-}
-
-function renderProducts(products) {
-  const container = document.getElementById("productsContainer");
-  const countEl = document.getElementById("catalogCount");
-  if (!container) return;
-  container.innerHTML = "";
-
-  const list = Array.isArray(products) ? products : [];
-  if (countEl) {
-    countEl.textContent = list.length + (list.length === 1 ? " pieza" : " piezas");
-  }
-
-  if (list.length === 0) {
-    container.innerHTML =
-      "<div class=\"empty-state\">No hay prendas disponibles en este filtro.</div>";
-    return;
-  }
-
-  for (const item of list) {
-    const card = document.createElement("article");
-    card.className = "product-card";
-    const isBusy = state.busyProducts.has(item.id);
-    const stockNum = Number(item.stock ?? 0);
-    const outOfStock = stockNum <= 0;
-    const priceNum = Number(item.price || 0).toFixed(2);
-    const brandText = String(item.brand || "E-MANAGMENT");
-    const categoryText = String(item.category || "PRENDA");
-    const hasImage = typeof item?.imageUrl === "string" && item.imageUrl.trim().length > 0;
-
-    const badgeMarkup = outOfStock
-      ? "<span class=\"tag-pill sold-out\">Agotado</span>"
-      : item.isNew
-      ? "<span class=\"tag-pill\">Nuevo</span>"
-      : "<span></span>";
-
-    const buttonLabel = outOfStock
-      ? "Sin existencias"
-      : isBusy
-      ? "Reservando..."
-      : "Agregar al carrito";
-
-    card.innerHTML =
-      "<div>" +
-      "<div class=\"product-visual" +
-      (hasImage ? " has-photo" : "") +
-      "\">" +
-      "<div class=\"visual-top\">" +
-      badgeMarkup +
-      "<span class=\"tag-pill\">Talla " +
-      escapeHtml(item.size) +
-      "</span>" +
-      "</div>" +
-      renderProductMedia(item, brandText, categoryText) +
-      "<div class=\"visual-bottom\">" +
-      "<span>Color: " +
-      escapeHtml(item.color) +
-      "</span>" +
-      "<span>Disp: " +
-      escapeHtml(stockNum) +
-      "</span>" +
-      "</div>" +
-      "</div>" +
-      "<div class=\"product-title-row\">" +
-      "<h3>" +
-      escapeHtml(item.name) +
-      "</h3>" +
-      "<span class=\"product-price\">$" +
-      priceNum +
-      "</span>" +
-      "</div>" +
-      "<p class=\"product-specs\">" +
-      escapeHtml(brandText) +
-      " · " +
-      escapeHtml(categoryText) +
-      " · " +
-      escapeHtml(item.color) +
-      "</p>" +
-      "<p class=\"product-id\">ID: " +
-      escapeHtml(item.id) +
-      "</p>" +
-      "</div>" +
-      "<button type=\"button\" class=\"btn-outline full-width\" data-add-id=\"" +
-      escapeHtml(item.id) +
-      "\"" +
-      (isBusy || outOfStock ? " disabled" : "") +
-      ">" +
-      buttonLabel +
-      "</button>";
-
-    container.appendChild(card);
-  }
+  const qs = params.toString();
+  window.location.href = qs ? `/catalogo.html?${qs}` : "/catalogo.html";
 }
 
 function renderCart(cart) {
@@ -417,7 +254,7 @@ function renderCart(cart) {
   if (itemsEl) {
     itemsEl.innerHTML = "";
     if (items.length === 0) {
-      itemsEl.innerHTML = "<p class=\"cart-row-meta\">El carrito está vacío.</p>";
+      itemsEl.innerHTML = '<p class="cart-row-meta">El carrito está vacío.</p>';
     } else {
       for (const item of items) {
         const row = document.createElement("div");
@@ -428,21 +265,21 @@ function renderCart(cart) {
         ).toFixed(2);
         row.innerHTML =
           "<div>" +
-          "<strong class=\"cart-row-title\">" +
+          '<strong class="cart-row-title">' +
           escapeHtml(item.name || item.productId) +
           "</strong>" +
-          "<div class=\"cart-row-meta\">Cant: " +
+          '<div class="cart-row-meta">Cant: ' +
           escapeHtml(item.quantity) +
           " · $" +
           unitPrice +
           " c/u</div>" +
-          "<div class=\"cart-row-meta\">Subtotal: $" +
+          '<div class="cart-row-meta">Subtotal: $' +
           subtotal +
           "</div>" +
           "</div>" +
-          "<button type=\"button\" class=\"btn-text\" data-remove-id=\"" +
+          '<button type="button" class="btn-text" data-remove-id="' +
           escapeHtml(item.productId) +
-          "\">Quitar</button>";
+          '">Quitar</button>';
         itemsEl.appendChild(row);
       }
     }
@@ -450,41 +287,6 @@ function renderCart(cart) {
 
   const total = Number(cart?.total ?? 0).toFixed(2);
   if (totalEl) totalEl.textContent = "$" + total;
-}
-
-async function loadProducts() {
-  try {
-    const query = state.onlyNew ? "?onlyNew=true" : "";
-    const res = await fetch("/api/products" + query);
-    const data = await parseResponseBody(res);
-    if (!res.ok) {
-      routeActionMessage(data.error || `No se pudo cargar el catálogo (HTTP ${res.status}).`, true);
-      return;
-    }
-    state.allCatalogCache = Array.isArray(data) ? data : [];
-    const filtered = filterByDepartment(state.allCatalogCache);
-
-    const deptLabel =
-      state.department === "WOMAN"
-        ? " · MUJER"
-        : state.department === "MAN"
-        ? " · HOMBRE"
-        : "";
-
-    const eyebrowEl = document.getElementById("catalogEyebrow");
-    const titleEl = document.getElementById("catalogTitle");
-    if (eyebrowEl) {
-      eyebrowEl.textContent = (state.onlyNew ? "ROPA NUEVA" : "CATÁLOGO DISPONIBLE") + deptLabel;
-    }
-    if (titleEl) {
-      titleEl.textContent = (state.onlyNew ? "Novedades" : "Colección") + deptLabel;
-    }
-
-    syncNavState();
-    renderProducts(filtered);
-  } catch (_err) {
-    routeActionMessage("Sin conexión con el servidor al consultar productos.", true);
-  }
 }
 
 async function loadCart() {
@@ -506,46 +308,6 @@ async function loadCart() {
     }
   } catch (_err) {
     routeActionMessage("Sin conexión con el servidor al consultar el carrito.", true, "cartStatusBanner");
-  }
-}
-
-async function addToCart(productId) {
-  if (state.busyProducts.has(productId)) return;
-  state.busyProducts.add(productId);
-  await loadProducts();
-
-  try {
-    const res = await fetch("/api/cart/items", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      credentials: "same-origin",
-      body: JSON.stringify({ productId, quantity: 1 }),
-    });
-    const data = await parseResponseBody(res);
-
-    if (res.status === 401) {
-      openAuthModal("login", "Inicia sesión para agregar prendas al carrito.");
-      return;
-    }
-
-    if (!res.ok) {
-      routeActionMessage(
-        data.error || `No se pudo agregar al carrito (HTTP ${res.status}).`,
-        true,
-        "cartStatusBanner"
-      );
-      return;
-    }
-
-    clearInlineAlert("cartStatusBanner");
-    renderCart(data);
-    openCartDrawer();
-    showInlineAlert("cartStatusBanner", "Prenda agregada al carrito (reserva de 3 minutos).", false);
-  } catch (_err) {
-    routeActionMessage("Sin conexión con el servidor al actualizar el carrito.", true, "cartStatusBanner");
-  } finally {
-    state.busyProducts.delete(productId);
-    await loadProducts();
   }
 }
 
@@ -571,7 +333,6 @@ async function removeFromCart(productId) {
     clearInlineAlert("cartStatusBanner");
     renderCart(data);
     showInlineAlert("cartStatusBanner", "Prenda retirada del carrito.", false);
-    await loadProducts();
   } catch (_err) {
     showInlineAlert("cartStatusBanner", "Sin conexión con el servidor al quitar la prenda.", true);
   }
@@ -733,7 +494,6 @@ async function checkoutOrder() {
     renderCart({ items: [], total: 0 });
     closeAllOverlays();
     showStatus("Compra registrada con éxito. Orden: " + String(data.id || ""), false);
-    await loadProducts();
   } catch (_networkErr) {
     showInlineAlert(
       "cartStatusBanner",
@@ -762,18 +522,15 @@ async function restoreSession() {
   }
 }
 
-async function applyFilter(options = {}) {
-  if (typeof options.onlyNew === "boolean") state.onlyNew = options.onlyNew;
-  if (typeof options.department === "string") state.department = options.department;
-  updateUrlQuery();
-  await loadProducts();
-}
-
-document.getElementById("btnFilterWoman")?.addEventListener("click", () => applyFilter({ department: "WOMAN" }));
-document.getElementById("btnFilterMan")?.addEventListener("click", () => applyFilter({ department: "MAN" }));
-document.getElementById("btnAllProducts")?.addEventListener("click", () => applyFilter({ onlyNew: false, department: "ALL" }));
-document.getElementById("btnNewProducts")?.addEventListener("click", () => applyFilter({ onlyNew: true }));
-document.getElementById("btnResetFilters")?.addEventListener("click", () => applyFilter({ onlyNew: false, department: "ALL" }));
+document.getElementById("btnFilterWoman")?.addEventListener("click", () => goToCatalog({ department: "WOMAN" }));
+document.getElementById("btnFilterMan")?.addEventListener("click", () => goToCatalog({ department: "MAN" }));
+document.getElementById("btnAllProducts")?.addEventListener("click", () => goToCatalog({ onlyNew: false, department: "ALL" }));
+document.getElementById("btnNewProducts")?.addEventListener("click", () => goToCatalog({ onlyNew: true }));
+document.getElementById("btnResetFilters")?.addEventListener("click", () => goToCatalog({ onlyNew: false, department: "ALL" }));
+document.getElementById("btnEnterCatalog")?.addEventListener("click", (event) => {
+  event.preventDefault();
+  goToCatalog({ onlyNew: false, department: "ALL" });
+});
 
 document.getElementById("btnAdminPanel")?.addEventListener("click", () => {
   window.location.href = "/admin.html";
@@ -804,25 +561,21 @@ document.getElementById("authForm")?.addEventListener("submit", async (event) =>
 document.getElementById("btnLogout")?.addEventListener("click", async () => logoutUser());
 document.getElementById("btnCheckout")?.addEventListener("click", async () => checkoutOrder());
 
-document.getElementById("productsContainer")?.addEventListener("click", async (event) => {
-  const target = event.target instanceof Element ? event.target.closest("[data-add-id]") : null;
-  const productId = target?.getAttribute("data-add-id");
-  if (productId) await addToCart(productId);
-});
-
 document.getElementById("cartItems")?.addEventListener("click", async (event) => {
   const target = event.target instanceof Element ? event.target.closest("[data-remove-id]") : null;
   const productId = target?.getAttribute("data-remove-id");
-  if (productId) await removeFromCart(productId);
+  if (productId) {
+    await removeFromCart(productId);
+  }
 });
 
 document.addEventListener("keydown", (event) => {
-  if (event.key === "Escape") closeAllOverlays();
+  if (event.key === "Escape") {
+    closeAllOverlays();
+  }
 });
 
 (async function init() {
-  readInitialFiltersFromUrl();
-  await loadProducts();
   await restoreSession();
   await loadCart();
 })();
