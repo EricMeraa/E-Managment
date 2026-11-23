@@ -3,33 +3,24 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>E-MANAGMENT | Inicio</title>
-  <link rel="stylesheet" href="/styles.css?v=6" />
+  <title>E-MANAGMENT | Catálogo</title>
+  <link rel="stylesheet" href="/styles.css?v=8" />
 </head>
 <body>
-  <section class="start-hero" id="startHero" aria-label="Portada principal">
-    <div class="hero-backdrop-art" aria-hidden="true">
-      <div class="room-wall"></div>
-      <div class="room-frame"></div>
-      <div class="room-lamp"></div>
-      <div class="room-table"></div>
-      <div class="room-pillow"></div>
-    </div>
-    <div class="hero-scrim" aria-hidden="true"></div>
-
-    <header class="hero-topbar">
-      <div class="topbar-side left">
-        <button id="btnFilterWoman" class="hero-nav-btn" type="button">Mujer</button>
-        <button id="btnFilterMan" class="hero-nav-btn" type="button">Hombre</button>
-        <button id="btnAllProducts" class="hero-nav-btn active" type="button">Colección</button>
-        <button id="btnNewProducts" class="hero-nav-btn" type="button">Nuevo</button>
+  <header class="site-header">
+    <div class="header-inner">
+      <div class="header-left">
+        <a href="/index.html" class="brand-title">E - M A N A G M E N T</a>
+        <nav class="catalog-nav" aria-label="Filtros del catálogo">
+          <button id="btnFilterWoman" class="hero-nav-btn" type="button">Mujer</button>
+          <button id="btnFilterMan" class="hero-nav-btn" type="button">Hombre</button>
+          <button id="btnAllProducts" class="hero-nav-btn" type="button">Colección</button>
+          <button id="btnNewProducts" class="hero-nav-btn" type="button">Nuevo</button>
+          <button id="btnResetFilters" class="btn-text" type="button">Limpiar</button>
+        </nav>
       </div>
 
-      <div class="topbar-center">
-        <a href="#catalogSection" class="hero-brand-title">E - M A N A G M E N T</a>
-      </div>
-
-      <div class="topbar-side right">
+      <div class="header-actions">
         <button id="btnAdminPanel" class="hero-nav-btn" type="button" style="display: none;">Panel Admin</button>
         <span id="userBadge" class="hero-user-badge" style="display: none;"></span>
         <button id="btnOpenAuth" class="hero-nav-btn" type="button">Iniciar sesión</button>
@@ -38,121 +29,19 @@
           Carrito (<span id="cartCount">0</span>)
         </button>
       </div>
-    </header>
-
-    <div class="hero-centerpiece">
-      <div class="monogram-me" aria-label="E-Managment Monograma">ME</div>
-      <p class="hero-caption">EDICIÓN CONTEMPORÁNEA · INVENTARIO EN TIEMPO REAL</p>
-      <a href="#catalogSection" class="hero-cta">Entrar al catálogo</a>
     </div>
-  </section>
+  </header>
 
   <div id="statusBanner" class="status-banner" role="status" aria-live="polite"></div>
 
   <main class="main-container" id="catalogSection">
-    <section id="adminSection" class="admin-panel" style="display: none;">
-      <div class="section-header">
-        <div>
-          <p class="eyebrow">PANEL DE ADMINISTRADORES</p>
-          <h2>Gestión de inventario y ganancias</h2>
-        </div>
-        <div class="toolbar-right">
-          <button id="btnRefreshEarnings" class="btn-text" type="button">Actualizar reporte</button>
-          <button id="btnCloseAdmin" class="btn-text" type="button">Cerrar panel</button>
-        </div>
-      </div>
-
-      <div id="adminStatusBanner" class="inline-alert" role="alert" aria-live="polite"></div>
-
-      <div id="earningsContent" class="earnings-grid"></div>
-
-      <div class="admin-divider"></div>
-
-      <div class="admin-form-wrapper">
-        <div>
-          <p class="eyebrow">ALTA DE PRENDA (UC-05)</p>
-          <h3>Registrar nueva prenda en catálogo</h3>
-          <p class="admin-help">
-            Cada prenda registrada se guarda con identificador único y actualiza automáticamente la tienda.
-          </p>
-        </div>
-
-        <form id="createProductForm" class="admin-form-grid">
-          <div class="field-group">
-            <label for="prodName">Nombre de la prenda</label>
-            <input id="prodName" type="text" placeholder="Ej. Sudadera Boxy Heavyweight" required />
-          </div>
-
-          <div class="field-group">
-            <label for="prodBrand">Marca</label>
-            <input id="prodBrand" type="text" placeholder="Ej. E-Managment Studio" required />
-          </div>
-
-          <div class="field-group">
-            <label for="prodCategory">Categoría / Departamento</label>
-            <select id="prodCategory">
-              <option value="Playeras Hombre">Playeras Hombre</option>
-              <option value="Playeras Mujer">Playeras Mujer</option>
-              <option value="Sudaderas Hombre">Sudaderas Hombre</option>
-              <option value="Sudaderas Mujer">Sudaderas Mujer</option>
-              <option value="Pantalones Hombre">Pantalones Hombre</option>
-              <option value="Pantalones Mujer">Pantalones Mujer</option>
-              <option value="Accesorios">Accesorios</option>
-            </select>
-          </div>
-
-          <div class="field-group">
-            <label for="prodSize">Talla</label>
-            <select id="prodSize">
-              <option value="XS">XS</option>
-              <option value="S">S</option>
-              <option value="M" selected>M</option>
-              <option value="L">L</option>
-              <option value="XL">XL</option>
-            </select>
-          </div>
-
-          <div class="field-group">
-            <label for="prodColor">Color</label>
-            <input id="prodColor" type="text" placeholder="Ej. Negro Lavado / Marfil" required />
-          </div>
-
-          <div class="field-group">
-            <label for="prodPrice">Precio ($ MXN)</label>
-            <input id="prodPrice" type="number" step="0.01" min="1" placeholder="1290.00" required />
-          </div>
-
-          <div class="field-group">
-            <label for="prodStock">Existencias iniciales (Stock)</label>
-            <input id="prodStock" type="number" step="1" min="1" placeholder="15" required />
-          </div>
-
-          <div class="field-group checkbox-group">
-            <label class="checkbox-label" for="prodIsNew">
-              <input id="prodIsNew" type="checkbox" checked />
-              <span>Marcar en apartado de Ropa Nueva</span>
-            </label>
-          </div>
-
-          <div class="admin-submit-cell">
-            <button id="btnCreateProduct" class="btn-primary full-width" type="submit">
-              Publicar prenda en inventario
-            </button>
-          </div>
-        </form>
-      </div>
-    </section>
-
-    <section class="catalog-section">
+    <section class="catalog-section" aria-label="Catálogo de prendas">
       <div class="catalog-toolbar">
         <div>
-          <p class="eyebrow" id="catalogEyebrow">CATÁLOGO GENERAL</p>
-          <h2 id="catalogTitle">Todas las prendas</h2>
+          <p id="catalogEyebrow" class="eyebrow">CATÁLOGO DISPONIBLE</p>
+          <h1 id="catalogTitle">Colección</h1>
         </div>
-        <div class="toolbar-right">
-          <button id="btnResetFilters" class="btn-text" type="button">Ver todo</button>
-          <p class="catalog-count" id="catalogCount">0 piezas</p>
-        </div>
+        <p id="catalogCount" class="catalog-count">0 piezas</p>
       </div>
 
       <div id="productsContainer" class="product-grid"></div>
@@ -165,7 +54,7 @@
         <span class="footer-brand">E-MANAGMENT</span>
         <p class="footer-note">Plataforma de ropa · Bloqueo temporal de 3 minutos al reservar.</p>
       </div>
-      <p class="footer-note">Inicio de sesión obligatorio para comprar.</p>
+      <p class="footer-note">Inicio de sesión obligatorio para comprar y gestionar cuenta.</p>
     </div>
   </footer>
 
@@ -259,6 +148,29 @@
     </div>
   </div>
 
-  <script src="/app.js?v=6"></script>
+  <div id="logoutConfirmModal" class="modal" role="dialog" aria-modal="true" aria-labelledby="logoutConfirmTitle" style="display: none;">
+    <div class="modal-card">
+      <div class="modal-accent-bar" aria-hidden="true"></div>
+      <div class="modal-header">
+        <span class="modal-eyebrow-wrap">
+          <span class="modal-dot" aria-hidden="true"></span>
+          <span class="eyebrow">SALIDA DE SESIÓN</span>
+        </span>
+        <button id="btnCancelLogoutTop" class="btn-text" type="button">Cerrar</button>
+      </div>
+
+      <h2 id="logoutConfirmTitle" class="modal-title">¿Estás seguro de cerrar sesión?</h2>
+      <p class="modal-desc">
+        Se cerrará tu sesión actual en E-Managment. Podrás volver a iniciar sesión cuando lo necesites.
+      </p>
+
+      <div class="modal-actions">
+        <button id="btnCancelLogout" class="btn-secondary" type="button">Cancelar</button>
+        <button id="btnConfirmLogout" class="btn-primary" type="button">Sí, cerrar sesión</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="/catalogo.js?v=5"></script>
 </body>
 </html>
