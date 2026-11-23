@@ -31,11 +31,12 @@ body {
   -webkit-font-smoothing: antialiased;
 }
 
-/* Cabecera de páginas interiores (p. ej. Catálogo) */
+/* Cabecera superior del catálogo: botones arriba, estéticos y con letras en negro */
 .site-header {
   position: sticky;
   top: 0;
   z-index: 30;
+  width: 100%;
   background: var(--bg);
   border-bottom: 1px solid var(--border);
 }
@@ -43,19 +44,19 @@ body {
 .header-inner {
   max-width: 1380px;
   margin: 0 auto;
-  padding: 16px 28px;
+  padding: 14px 28px;
   display: flex;
   align-items: center;
   justify-content: space-between;
   flex-wrap: wrap;
-  gap: 16px;
+  gap: 14px;
 }
 
 .header-left {
   display: flex;
   align-items: center;
   flex-wrap: wrap;
-  gap: 20px;
+  gap: 18px;
 }
 
 .brand-title {
@@ -72,17 +73,16 @@ body {
   display: flex;
   align-items: center;
   flex-wrap: wrap;
-  gap: 14px;
+  gap: 8px;
 }
 
 .header-actions {
   display: flex;
   align-items: center;
   flex-wrap: wrap;
-  gap: 12px;
+  gap: 8px;
 }
 
-/* Botones en cabecera clara y catálogo: contraste alto en negro */
 .site-header .hero-nav-btn,
 .site-header a.hero-nav-btn,
 .catalog-nav .hero-nav-btn,
@@ -91,19 +91,23 @@ body {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  background: transparent;
-  border: 1px solid transparent;
-  border-bottom: 1px solid transparent;
-  padding: 6px 10px;
+  appearance: none;
+  -webkit-appearance: none;
+  background-color: var(--bg);
   color: var(--ink);
-  text-decoration: none;
+  border: 1px solid var(--border);
+  border-bottom: 1px solid var(--border);
+  border-radius: 0;
+  padding: 7px 12px;
+  font-family: var(--font-sans);
   font-size: 11px;
   letter-spacing: 0.1em;
   text-transform: uppercase;
+  text-decoration: none;
   cursor: pointer;
   opacity: 1;
   visibility: visible;
-  transition: background 0.2s ease, color 0.2s ease, border-color 0.2s ease;
+  transition: background-color 0.2s ease, color 0.2s ease, border-color 0.2s ease;
 }
 
 .site-header .hero-nav-btn:hover,
@@ -116,13 +120,15 @@ body {
 .catalog-nav a.hero-nav-btn:focus-visible,
 .header-actions .hero-nav-btn:hover,
 .header-actions .hero-nav-btn:focus-visible {
+  background-color: var(--surface);
   color: var(--ink);
+  border-color: var(--ink);
   border-bottom-color: var(--ink);
 }
 
 .site-header .hero-nav-btn.active,
 .catalog-nav .hero-nav-btn.active {
-  background: var(--ink);
+  background-color: var(--ink);
   color: #ffffff;
   border-color: var(--ink);
   border-bottom-color: var(--ink);
@@ -130,39 +136,63 @@ body {
 
 .site-header .btn-text,
 .catalog-nav .btn-text {
+  appearance: none;
+  -webkit-appearance: none;
+  background-color: transparent;
   color: var(--ink);
-  opacity: 1;
-  visibility: visible;
-}
-
-.site-header .user-badge,
-.site-header .hero-user-badge,
-.header-actions .hero-user-badge {
-  font-size: 11px;
-  color: var(--ink-muted);
-  padding: 4px 8px;
-  background: var(--surface);
-  border: 1px solid var(--border);
-}
-
-.site-header .hero-cart-btn,
-.header-actions .hero-cart-btn {
-  background: var(--ink);
-  border: 1px solid var(--ink);
-  color: #ffffff;
-  padding: 7px 14px;
+  border: 1px solid transparent;
+  padding: 7px 10px;
   font-size: 11px;
   letter-spacing: 0.1em;
   text-transform: uppercase;
   cursor: pointer;
   opacity: 1;
   visibility: visible;
-  transition: background 0.2s ease, color 0.2s ease;
+}
+
+.site-header .btn-text:hover,
+.catalog-nav .btn-text:hover {
+  color: var(--ink);
+  border-bottom-color: var(--ink);
+}
+
+.site-header .hero-user-badge,
+.header-actions .hero-user-badge {
+  display: inline-flex;
+  align-items: center;
+  background-color: var(--surface);
+  color: var(--ink);
+  border: 1px solid var(--border);
+  padding: 6px 10px;
+  font-size: 11px;
+  letter-spacing: 0.06em;
+}
+
+.site-header .hero-cart-btn,
+.header-actions .hero-cart-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  appearance: none;
+  -webkit-appearance: none;
+  background-color: var(--ink);
+  color: #ffffff;
+  border: 1px solid var(--ink);
+  border-radius: 0;
+  padding: 7px 14px;
+  font-family: var(--font-sans);
+  font-size: 11px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  cursor: pointer;
+  opacity: 1;
+  visibility: visible;
+  transition: background-color 0.2s ease, color 0.2s ease;
 }
 
 .site-header .hero-cart-btn:hover,
 .header-actions .hero-cart-btn:hover {
-  background: #2b2b2b;
+  background-color: #2b2b2b;
   color: #ffffff;
 }
 
