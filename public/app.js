@@ -253,6 +253,133 @@ function goToCatalog(options = {}) {
   window.location.href = targetUrl;
 }
 
+function renderNewPreviewMedia(item, brandText, categoryText) {
+  const rawImageUrl = typeof item?.imageUrl === "string" ? item.imageUrl.trim() : "";
+  const safeName = escapeHtml(item?.name || "Prenda");
+  const safeBrand = escapeHtml(brandText);
+  const safeCategory = escapeHtml(categoryText);
+
+  if (rawImageUrl) {
+    const safeUrl = escapeHtml(rawImageUrl);
+    return (
+      '<img src="' +
+      safeUrl +
+      '" alt="' +
+      safeName +
+      '" class="product-visual-img" loading="lazy" ' +
+      "onerror=\"this.classList.add('is-hidden'); const fb = this.nextElementSibling; if (fb) fb.classList.add('is-visible');\" />" +
+      '<div class="visual-center product-visual-fallback">' +
+      '<span class="visual-category">' +
+      safeCategory +
+      "</span>" +
+      '<span class="visual-monogram">' +
+      safeBrand.toUpperCase() +
+      "</span>" +
+      "</div>"
+    );
+  }
+
+  return (
+    '<div class="visual-center">' +
+    '<span class="visual-category">' +
+    safeCategory +
+    "</span>" +
+    '<span class="visual-monogram">' +
+    safeBrand.toUpperCase() +
+    "</span>" +
+    "</div>"
+  );
+}
+
+function renderNewPreview(products) {
+  const container = document.getElementById("newProductsContainer");
+  const countEl = document.getElementById("newPreviewCount");
+  if (!container) return;
+  container.innerHTML = "";
+
+  const list = (Array.isArray(products) ? products : []).filter(
+    (item) => Boolean(item?.isNew) && Number(item?.stock ?? 0) > 0
+  );
+
+  if (countEl) {
+    countEl.textContent = list.length + (list.length === 1 ? " pieza" : " piezas");
+  }
+
+  if (list.length === 0) {
+    container.innerHTML =
+      '<div class="empty-state">No hay prendas nuevas disponibles en este momento.</div>';
+    return;
+  }
+
+  for (const item of list.slice(0, 6)) {
+    const card = document.createElement("article");
+    card.className = "product-card";
+    const stockNum = Number(item.stock ?? 0);
+    const priceNum = Number(item.price || 0).toFixed(2);
+    const brandText = String(item.brand || "E-MANAGMENT");
+    const categoryText = String(item.category || "PRENDA");
+    const hasImage = typeof item?.imageUrl === "string" && item.imageUrl.trim().length > 0;
+
+    card.innerHTML =
+      "<div>" +
+      '<div class="product-visual' +
+      (hasImage ? " has-photo" : "") +
+      '">' +
+      '<div class="visual-top">' +
+      '<span class="tag-pill">Nuevo</span>' +
+      '<span class="tag-pill">Talla ' +
+      escapeHtml(item.size) +
+      "</span>" +
+      "</div>" +
+      renderNewPreviewMedia(item, brandText, categoryText) +
+      '<div class="visual-bottom">' +
+      "<span>Color: " +
+      escapeHtml(item.color) +
+      "</span>" +
+      "<span>Disp: " +
+      escapeHtml(stockNum) +
+      "</span>" +
+      "</div>" +
+      "</div>" +
+      '<div class="product-title-row">' +
+      "<h3>" +
+      escapeHtml(item.name) +
+      "</h3>" +
+      '<span class="product-price">$' +
+      priceNum +
+      "</span>" +
+      "</div>" +
+      '<p class="product-specs">' +
+      escapeHtml(brandText) +
+      " · " +
+      escapeHtml(categoryText) +
+      " · " +
+      escapeHtml(item.color) +
+      "</p>" +
+      "</div>" +
+      '<button type="button" class="btn-outline full-width" data-open-new-catalog="1">' +
+      "Ver en catálogo" +
+      "</button>";
+
+    container.appendChild(card);
+  }
+}
+
+async function loadNewPreview() {
+  try {
+    const res = await fetch("/api/products?onlyNew=true", { credentials: "same-origin" });
+    if (!res.ok) {
+      renderNewPreview([]);
+      return;
+    }
+    const data = await parseResponseBody(res);
+    const items = Array.isArray(data) ? data : [];
+    renderNewPreview(items);
+  } catch (_err) {
+    renderNewPreview([]);
+  }
+}
+
 function renderCart(cart) {
   const itemsEl = document.getElementById("cartItems");
   const totalEl = document.getElementById("cartTotal");
@@ -546,9 +673,21 @@ document.getElementById("btnFilterWoman")?.addEventListener("click", () => goToC
 document.getElementById("btnFilterMan")?.addEventListener("click", () => goToCatalog({ department: "MAN" }));
 document.getElementById("btnAllProducts")?.addEventListener("click", () => goToCatalog({ onlyNew: false, department: "ALL" }));
 document.getElementById("btnNewProducts")?.addEventListener("click", () => goToCatalog({ onlyNew: true }));
+document.getElementById("btnViewAllNew")?.addEventListener("click", () => goToCatalog({ onlyNew: true }));
+document.getElementById("brandCatalogLink")?.addEventListener("click", (event) => {
+  event.preventDefault();
+  goToCatalog({ onlyNew: false, department: "ALL" });
+});
 document.getElementById("btnEnterCatalog")?.addEventListener("click", (event) => {
   event.preventDefault();
   goToCatalog({ onlyNew: false, department: "ALL" });
+});
+
+document.getElementById("newProductsContainer")?.addEventListener("click", (event) => {
+  const target = event.target instanceof Element ? event.target.closest("[data-open-new-catalog]") : null;
+  if (target) {
+    goToCatalog({ onlyNew: true });
+  }
 });
 
 document.getElementById("btnAdminPanel")?.addEventListener("click", () => {
@@ -597,5 +736,6 @@ document.addEventListener("keydown", (event) => {
 (async function init() {
   await restoreSession();
   consumeAuthRedirectQuery();
+  await loadNewPreview();
   await loadCart();
 })();
