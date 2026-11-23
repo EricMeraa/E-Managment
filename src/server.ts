@@ -20,11 +20,16 @@ import { MariaDBUserRepository } from "./infrastructure/repositories/MariaDBUser
 
 const app = express();
 const port = Number(process.env.PORT ?? 3000);
+const isProduction = process.env.NODE_ENV === "production";
 const sessionSecret = process.env.SESSION_SECRET || "e-managment-local-secret-change-in-prod";
 const publicDir = path.join(process.cwd(), "public");
 const productUploadsDir = path.join(publicDir, "uploads", "products");
 
 fs.mkdirSync(productUploadsDir, { recursive: true });
+
+if (isProduction) {
+  app.set("trust proxy", 1);
+}
 
 const allowedMimeToExt: Record<string, string> = {
   "image/jpeg": ".jpg",
@@ -77,6 +82,7 @@ app.use(
     cookie: {
       httpOnly: true,
       sameSite: "lax",
+      secure: isProduction,
       maxAge: 1000 * 60 * 60 * 4,
     },
   })
