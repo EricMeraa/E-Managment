@@ -141,7 +141,10 @@ function closeCartDrawer() {
 function resetPasswordVisibility() {
   const passwordEl = document.getElementById("authPassword");
   const toggleBtn = document.getElementById("btnTogglePassword");
-  if (passwordEl) passwordEl.type = "password";
+  if (passwordEl) {
+    passwordEl.type = "password";
+    passwordEl.value = "";
+  }
   if (toggleBtn) {
     toggleBtn.textContent = "Mostrar";
     toggleBtn.setAttribute("aria-pressed", "false");
@@ -163,7 +166,6 @@ function openAuthModal(mode = "login", prefillError = "") {
   closeCartDrawer();
   clearStatus();
   clearInlineAlert("authStatusBanner");
-  resetPasswordVisibility();
   const backdrop = document.getElementById("overlayBackdrop");
   const modal = document.getElementById("authModal");
   if (backdrop) backdrop.style.display = "block";
@@ -643,7 +645,6 @@ async function submitAuth() {
     const userLabel = String(data.name || data.email || "Usuario");
     const userRole = String(data.role || "CUSTOMER").toUpperCase();
     setAuthenticatedUI(true, userLabel, userRole);
-    if (passwordEl) passwordEl.value = "";
     resetPasswordVisibility();
     closeAllOverlays();
 
