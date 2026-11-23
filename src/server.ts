@@ -124,6 +124,10 @@ const salesController = new SalesController(
   earningsPresenter
 );
 
+app.get("/health", (_req: Request, res: Response) => {
+  res.status(200).json({ status: "ok" });
+});
+
 app.get("/api/auth/me", authController.me);
 app.post("/api/auth/register", authController.register);
 app.post("/api/auth/login", authController.login);
