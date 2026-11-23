@@ -1,8 +1,4 @@
 const state = {
-  onlyNew: false,
-  department: "ALL",
-  allCatalogCache: [],
-  busyProducts: new Set(),
   checkoutBusy: false,
   cartItems: [],
   authMode: "login",
@@ -64,19 +60,16 @@ function routeActionMessage(message, isError = true, preferredInlineId = "") {
     if (isError) clearStatus();
     return;
   }
-
   if (isAuthModalOpen()) {
     showInlineAlert("authStatusBanner", message, isError);
     if (isError) clearStatus();
     return;
   }
-
   if (isCartOpen()) {
     showInlineAlert("cartStatusBanner", message, isError);
     if (isError) clearStatus();
     return;
   }
-
   showStatus(message, isError);
 }
 
@@ -206,16 +199,12 @@ function setAuthenticatedUI(isAuthenticated, label = "", role = "CUSTOMER") {
   const openAuthBtn = document.getElementById("btnOpenAuth");
   const logoutBtn = document.getElementById("btnLogout");
   const adminBtn = document.getElementById("btnAdminPanel");
-  const adminSection = document.getElementById("adminSection");
   const badge = document.getElementById("userBadge");
 
   if (openAuthBtn) openAuthBtn.style.display = isAuthenticated ? "none" : "inline-block";
   if (logoutBtn) logoutBtn.style.display = isAuthenticated ? "inline-block" : "none";
   if (adminBtn) {
     adminBtn.style.display = isAuthenticated && state.userRole === "ADMIN" ? "inline-block" : "none";
-  }
-  if (adminSection) {
-    adminSection.style.display = "none";
   }
 
   if (badge) {
@@ -526,7 +515,6 @@ document.getElementById("btnFilterWoman")?.addEventListener("click", () => goToC
 document.getElementById("btnFilterMan")?.addEventListener("click", () => goToCatalog({ department: "MAN" }));
 document.getElementById("btnAllProducts")?.addEventListener("click", () => goToCatalog({ onlyNew: false, department: "ALL" }));
 document.getElementById("btnNewProducts")?.addEventListener("click", () => goToCatalog({ onlyNew: true }));
-document.getElementById("btnResetFilters")?.addEventListener("click", () => goToCatalog({ onlyNew: false, department: "ALL" }));
 document.getElementById("btnEnterCatalog")?.addEventListener("click", (event) => {
   event.preventDefault();
   goToCatalog({ onlyNew: false, department: "ALL" });
