@@ -28,7 +28,19 @@ export class CartController {
 
     try {
       const productId = String(req.body?.productId ?? "").trim();
-      const quantity = Number(req.body?.quantity ?? 1);
+      const rawQuantity = req.body?.quantity ?? 1;
+      const quantity =
+        typeof rawQuantity === "number"
+          ? rawQuantity
+          : typeof rawQuantity === "string" && rawQuantity.trim() !== ""
+          ? Number(rawQuantity)
+          : NaN;
+
+      if (!Number.isInteger(quantity) || quantity <= 0) {
+        res.status(400).json({ error: "La cantidad debe ser un número entero mayor a cero." });
+        return;
+      }
+
       const cart = await this.manageShoppingCart.addItem(userId, productId, quantity);
       res.status(200).json(cart);
     } catch (error) {
