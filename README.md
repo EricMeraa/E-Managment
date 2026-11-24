@@ -28,11 +28,8 @@ El proyecto aplica **Clean Architecture** manteniendo las dependencias apuntando
 
 ## Cómo correrlo
 1. **Requisitos:** Node.js (v22 recomendado según `@types/node`) y acceso a una instancia de base de datos compatible configurada con Prisma.
-2. **Variables de entorno:** Copia el archivo de ejemplo y rellena las variables necesarias (sin subir secretos al repositorio):
-   ```bash
-   cp .env.example .env
-   ```[cite: 5, 8, 22]
-3. **Instalación y sincronización de base de datos:**
+
+2. **Instalación y sincronización de base de datos:**
    ```bash
    npm install
    npm run prisma:push
